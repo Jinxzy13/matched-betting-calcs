@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Early Payout Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg1:#04394a; --bg2:#021e28; --panel:#002d3c; --line:#0e586d;
+      --ink:#e6faff; --accent:#7ce3f0; --btn1:#16b7c5; --btn2:#109aa6;
+      --win:#2ed47a; --loss:#ff6b6b; --muted:rgba(230,250,255,0.7);
+    }
+    *{box-sizing:border-box}
+    body{
+  font-family:'Ubuntu',sans-serif;
+  background: radial-gradient(circle at 50% 30%, var(--bg1), var(--bg2) 80%);
+  color:var(--ink);
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;       /* stack children vertically */
+  align-items:center;          /* centre horizontally */
+  justify-content:flex-start;  /* start at top, not middle */
+  text-align:center;
+}
+
+    .wrap{
+      background:rgba(0,45,60,.9);
+      border-radius:16px;
+      border:1px solid var(--line);
+      width:min(1000px,96vw);
+      padding:1.25rem 1.5rem 1.6rem;
+      box-shadow:0 0 40px rgba(0,0,0,.4);
+      margin:1.5rem auto;
+    }
+    h1{
+      margin:.1rem 0 .25rem;
+      color:var(--accent);
+      font-size:1.6rem;
+      text-align:center;
+    }
+    .sub{
+      text-align:center;
+      font-size:.9rem;
+      color:var(--muted);
+      margin-bottom:.75rem;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:1rem;
+    }
+    @media (max-width:780px){
+      .grid-2{grid-template-columns:1fr;}
+    }
+    fieldset{
+      border-radius:12px;
+      border:1px solid var(--line);
+      padding:.8rem .9rem 1rem;
+      background:rgba(4,57,74,.65);
+      min-width:0;
+    }
+    legend{
+      padding:0 .3rem;
+      font-weight:600;
+      color:var(--accent);
+    }
+    label{
+      display:block;
+      font-size:.9rem;
+      margin:.35rem 0;
+    }
+    .small-label{
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      color:var(--muted);
+      margin-bottom:.15rem;
+      display:block;
+    }
+    input, select{
+      width:100%;
+      border-radius:6px;
+      border:1px solid #094a5d;
+      background:#032733;
+      color:var(--ink);
+      padding:.42rem .55rem;
+      font-family:inherit;
+      font-size:.95rem;
+    }
+    input[readonly]{
+      opacity:.9;
+      background:#021c25;
+    }
+    .inline{
+      display:flex;
+      gap:.35rem;
+      align-items:center;
+    }
+    .inline > span{
+      font-size:.9rem;
+      color:var(--muted);
+    }
+    .btn{
+      margin:1rem auto .2rem;
+      display:block;
+      background:linear-gradient(180deg,var(--btn1),var(--btn2));
+      border:none;
+      border-radius:999px;
+      color:#00252b;
+      font-weight:700;
+      padding:.55rem 1.4rem;
+      cursor:pointer;
+    }
+    .btn:hover{filter:brightness(1.08);}
+    .early-box{
+      margin-top:1rem;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(2,30,40,.9);
+      padding:.9rem .95rem 1rem;
+    }
+    .early-header{
+      text-align:center;
+      font-weight:600;
+      color:var(--accent);
+      font-size:1.1rem;
+      margin-bottom:.4rem;
+    }
+    .early-grid{
+      display:grid;
+      grid-template-columns: minmax(0,240px) minmax(0,260px);
+      gap:.75rem 1.2rem;
+      align-items:end;
+    }
+    @media (max-width:720px){
+      .early-grid{grid-template-columns:1fr;}
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:.7rem;
+      font-size:.9rem;
+    }
+    th, td{
+      padding:.45rem .5rem;
+      border-bottom:1px solid rgba(14,88,109,.6);
+      text-align:right;
+    }
+    th:first-child, td:first-child{text-align:left;}
+    thead{
+      background:rgba(4,57,74,.95);
+    }
+    tbody tr:nth-child(even){
+      background:rgba(0,32,42,.8);
+    }
+    .pl-pos{color:var(--win);font-weight:700;}
+    .pl-neg{color:var(--loss);font-weight:700;}
+    .tag{
+      display:inline-block;
+      border-radius:999px;
+      border:1px solid var(--line);
+      padding:.08rem .5rem;
+      font-size:.78rem;
+      margin-left:.3rem;
+      color:var(--muted);
+    }
+    .note{
+      font-size:.8rem;
+      color:var(--muted);
+      margin-top:.35rem;
+      text-align:center;
+    }
+
+.details-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  gap:.75rem;
+  margin-bottom:.9rem;
+}
+@media (max-width:780px){
+  .details-grid{grid-template-columns:1fr;}
+}
+
+/* Match autocomplete dropdown */
+.suggestions{
+  position:relative;
+  z-index:60;
+  background:#002d3c;
+  border:1px solid #0e586d;
+  border-radius:8px;
+  margin-top:4px;
+  display:none;
+  max-height:180px;
+  overflow-y:auto;
+  font-size:0.9rem;
+}
+.suggestion-item{
+  padding:4px 8px;
+  cursor:pointer;
+}
+.suggestion-item:hover{
+  background:#074456;
+}
+.suggestion-item .tiny{
+  font-size:0.78rem;
+  opacity:0.8;
+}
+
+
+  </style>
+</head>
+<body>
+<div class="topnav">
+    <a href="index.html">Main Calculator</a>
+    <a href="oddsmatcher.html">Odds Matcher</a>
+    <a href="refund.html">Risk Free</a>
+    <a href="acca.html">Acca</a>
+    <a href="ep.html">Extra Place</a>
+    <a href="early.html">Early Payout</a>
+    <a href="betbuilder.html">Bet Builder</a>
+</div>
+
+<style>
+  .topnav {
+    background: rgba(0,0,0,0.25);
+    padding: 0.4rem 0.8rem;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    margin-bottom: 1rem;
+    text-align: center;
+    border-radius: 0 0 8px 8px;
+  }
+  .topnav a {
+    color: #7ce3f0;
+    margin: 0 .8rem;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .topnav a:hover {
+    text-decoration: underline;
+  }
+
+.details-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  gap:.75rem;
+  margin-bottom:.9rem;
+}
+@media (max-width:780px){
+  .details-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+</style>
+
+<div class="wrap">
+  <h1>Early Payout Calculator</h1>
+  <div class="sub">
+    Standard qualifying lay bet. If your team goes two goals ahead and the bookmaker pays out early,
+    switch to <strong>Yes</strong> and enter the current exchange back odds to lock in profit.
+  </div>
+
+  <div class="details-grid">
+  <label>
+    <span class="small-label">Event / Match</span>
+    <input id="eventName" type="text" placeholder="e.g. Man United v Man City" autocomplete="off" />
+    <div id="eventSuggestions" class="suggestions"></div>
+  </label>
+  <label>
+    <span class="small-label">Bookmaker</span>
+    <input id="bookieName" type="text" placeholder="e.g. SkyBet" />
+  </label>
+  <label>
+    <span class="small-label">Exchange</span>
+    <input id="exchangeName" type="text" value="Matchbook" />
+  </label>
+</div>
+
+
+  <div class="grid-2">
+    <fieldset>
+      <legend>Back Bet (Bookmaker)</legend>
+      <label>
+        <span class="small-label">Back stake (£)</span>
+        <input id="backStake" type="number" step="1" min="0" value="10" />
+      </label>
+      <label>
+        <span class="small-label">Back odds (dec)</span>
+        <input id="backOdds" type="number" step="0.01" min="1.01" value="2.00" />
+      </label>
+      <label>
+        <span class="small-label">Max winnings (optional)</span>
+        <input id="maxWin" type="number" step="1" min="0" placeholder="" />
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Lay Bet (Exchange)</legend>
+      <label>
+        <span class="small-label">Lay odds (dec)</span>
+        <input id="layOdds" type="number" step="0.01" min="1.01" value="2.12" />
+      </label>
+      <label>
+        <span class="small-label">Lay commission (%)</span>
+        <input id="layComm" type="number" step="0.01" min="0" value="0" />
+      </label>
+      <label>
+        <span class="small-label">Lay stake (£)</span>
+        <input id="layStake" type="text" readonly />
+      </label>
+      <label>
+        <span class="small-label">Liability (£)</span>
+        <input id="liability" type="text" readonly />
+      </label>
+    </fieldset>
+  </div>
+
+  <button type="button" class="btn" id="recalcBtn">Recalculate</button>
+
+  <div class="early-box">
+    <div class="early-header">Early Payout</div>
+
+    <div class="early-grid">
+      <label>
+        <span class="small-label">Has the bookmaker paid out early?</span>
+        <select id="earlySwitch">
+          <option value="no">NO (normal qualifying)</option>
+          <option value="yes">YES (lock in profit)</option>
+        </select>
+      </label>
+
+      <div id="earlyInputs">
+        <label>
+          <span class="small-label">Exchange back odds (current)</span>
+          <input id="hedgeOdds" type="number" step="0.01" min="1.01" value="1.80" />
+        </label>
+        <label>
+          <span class="small-label">Hedge back stake (£)</span>
+          <input id="hedgeStake" type="text" readonly />
+        </label>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Outcome</th>
+          <th>Bookmaker</th>
+          <th>Exchange</th>
+          <th>Total P/L</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody">
+        
+      </tbody>
+    </table>
+    <button type="button" class="btn" id="saveBetBtn">Save bet</button>
+
+    <div class="note">
+      When set to <strong>NO</strong> this shows your normal qualifying loss.
+      When set to <strong>YES</strong> the hedge stake is chosen so all three outcomes
+      return the same profit.
+    </div>
+  </div>
+</div>
+
+<script>
+  const eventEl    = document.getElementById('eventName');
+  const bookieEl   = document.getElementById('bookieName');
+  const exchangeEl = document.getElementById('exchangeName');
+
+
+  const backStakeEl = document.getElementById('backStake');
+  const backOddsEl  = document.getElementById('backOdds');
+  const maxWinEl    = document.getElementById('maxWin');
+
+  const layOddsEl   = document.getElementById('layOdds');
+  const layCommEl   = document.getElementById('layComm');
+  const layStakeEl  = document.getElementById('layStake');
+  const liabilityEl = document.getElementById('liability');
+
+  const earlySwitchEl = document.getElementById('earlySwitch');
+  const hedgeOddsEl   = document.getElementById('hedgeOdds');
+  const hedgeStakeEl  = document.getElementById('hedgeStake');
+  const resultsBody   = document.getElementById('resultsBody');
+
+  // Store last calculation so we can save it
+  let lastCalc = null;
+
+  function money(x){
+    if (!isFinite(x)) return '0.00';
+    return (Math.round(x * 100) / 100).toFixed(2);
+  }
+
+  function fmtSigned(x){
+    const n = +x || 0;
+    const sign = n >= 0 ? '+' : '−';
+    return sign + '£' + money(Math.abs(n));
+  }
+
+  function recalc(){
+    const B  = parseFloat(backStakeEl.value) || 0;
+    const Ob = parseFloat(backOddsEl.value)  || 0;
+    const Ol = parseFloat(layOddsEl.value)   || 0;
+    const cPct = parseFloat(layCommEl.value) || 0;
+    const c = cPct / 100;
+
+    // Bookie max win (profit if wins)
+    // Optional cap from "Max winnings" input.
+    // If left blank, no cap is applied.
+    let rawBookProfit = 0;
+    if (B > 0 && Ob > 1) {
+      rawBookProfit = B * (Ob - 1);
+    }
+
+    let maxCap = parseFloat(
+      (maxWinEl.value || '').toString().replace(/[^0-9.]/g, '')
+    );
+    if (!isFinite(maxCap)) maxCap = null;
+
+    const bookProfitWin = maxCap ? Math.min(rawBookProfit, maxCap) : rawBookProfit;
+
+    let L = 0, Li = 0, layWinProfit = 0;
+
+    if (B > 0 && Ob > 1 && Ol > c && Ol > 1){
+      // Standard qualifying lay stake
+      L  = (B * Ob) / (Ol - c);
+      Li = (Ol - 1) * L;
+      layWinProfit = L * (1 - c);
+
+      layStakeEl.value  = '£' + money(L);
+      liabilityEl.value = '£' + money(Li);
+    } else {
+      layStakeEl.value  = '£0.00';
+      liabilityEl.value = '£0.00';
+    }
+
+    const mode = earlySwitchEl.value;
+
+    // Clear table
+    resultsBody.innerHTML = '';
+    lastCalc = null; // reset
+
+    if (!B || !Ob || !Ol || !L){
+      return;
+    }
+
+    let totWin, totDraw, totLose;
+    let exIfWin, exIfElse;
+    const bookLose = -B;
+
+    if (mode === 'no'){
+      // ----- Normal qualifying loss -----
+      exIfWin  = -Li;           // lay loses
+      exIfElse = layWinProfit;  // lay wins
+
+      totWin   = bookProfitWin + exIfWin;
+      totDraw  = bookLose + exIfElse;
+      totLose  = bookLose + exIfElse;
+
+      addRow('If team win',  bookProfitWin, exIfWin,  totWin);
+      addRow('If team draw', bookLose,     exIfElse, totDraw);
+      addRow('If team lose', bookLose,     exIfElse, totLose);
+
+    } else {
+      // ----- Early payout: compute hedge stake to equalise outcomes -----
+      const Hb = parseFloat(hedgeOddsEl.value) || 0;
+      if (Hb <= 1){
+        hedgeStakeEl.value = '£0.00';
+        return;
+      }
+
+      // Hedge stake X = (layWinProfit + Li) / Hb
+      const X = (layWinProfit + Li) / Hb;
+      hedgeStakeEl.value = '£' + money(X);
+
+      // Exchange P/L
+      // Final win: lay loses liability, hedge back wins (Hb-1)*X
+      exIfWin  = -Li + (Hb - 1) * X;
+      // Final draw/lose: lay wins, hedge back loses stake X
+      exIfElse = layWinProfit - X;
+
+      totWin   = bookProfitWin + exIfWin;   // early payout + exchange
+      totDraw  = bookProfitWin + exIfElse;  // early payout + exchange
+      totLose  = bookProfitWin + exIfElse;
+
+      addRow('If team win',  bookProfitWin, exIfWin,  totWin);
+      addRow('If team draw', bookProfitWin, exIfElse, totDraw);
+      addRow('If team lose', bookProfitWin, exIfElse, totLose);
+    }
+
+    const worstPL = Math.min(totWin, totDraw, totLose);
+
+    // store summary for Save Bet
+    lastCalc = {
+      mode,
+      B, Ob, Ol, cPct,
+      L,
+      bookProfitWin,
+      bookLose,
+      exIfWin,
+      exIfElse,
+      totWin,
+      totDraw,
+      totLose,
+      worstPL
+    };
+  }
+
+  function addRow(label, bookiePL, exchPL, totalPL){
+    const tr = document.createElement('tr');
+
+    const tdOutcome = document.createElement('td');
+    tdOutcome.textContent = label;
+
+    const tdBook = document.createElement('td');
+    tdBook.textContent = fmtSigned(bookiePL);
+
+    const tdEx = document.createElement('td');
+    tdEx.textContent = fmtSigned(exchPL);
+
+    const tdTot = document.createElement('td');
+    tdTot.textContent = fmtSigned(totalPL);
+    tdTot.className = totalPL >= 0 ? 'pl-pos' : 'pl-neg';
+
+    tr.appendChild(tdOutcome);
+    tr.appendChild(tdBook);
+    tr.appendChild(tdEx);
+    tr.appendChild(tdTot);
+
+    resultsBody.appendChild(tr);
+  }
+
+  // ---- Save to DB (same idea as main calc) ----
+  async function saveToServer(entry) {
+    const res = await fetch('save_bet.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(entry)
+    });
+    return res.json();
+  }
+
+  async function handleSaveClick(){
+    if (!lastCalc){
+      alert('Please calculate the bet first.');
+      return;
+    }
+
+    const c = lastCalc;
+
+    const entry = {
+      event: (eventEl.value || '—'),
+      outcome: (c.mode === 'yes') ? 'Early paid' : 'Normal',
+      bookie: (bookieEl.value || '—'),
+      exchange: (exchangeEl.value || '—'),
+      betType: (c.mode === 'yes') ? 'Early Payout (YES)' : 'Early Payout (NO)',
+      noLay: 0,
+      stake: Number(c.B),
+      backOdds: Number(c.Ob),
+      layOdds: Number(c.Ol),
+      commissionPct: Number(c.cPct),
+      layStake: Number(c.L),
+      backWins: Number(c.totWin),          // P/L if team win
+      layWins: Number(Math.min(c.totDraw, c.totLose)), // worst of other outcomes
+      expectedPL: Number(c.worstPL)        // worst-case P/L
+    };
+
+
+    try{
+      await saveToServer(entry);
+      alert('Bet saved to database.');
+    } catch (err){
+      console.error(err);
+      alert('There was a problem saving this bet.');
+    }
+  }
+
+  // Events
+  document.getElementById('recalcBtn').addEventListener('click', recalc);
+  document.getElementById('saveBetBtn').addEventListener('click', handleSaveClick);
+
+  [backStakeEl, backOddsEl, layOddsEl, layCommEl,
+   earlySwitchEl, hedgeOddsEl, maxWinEl].forEach(el => {
+    el.addEventListener('input', recalc);
+    el.addEventListener('change', recalc);
+  });
+
+// ---------- Match autocomplete using fixtures_search.php ----------
+const suggBox = document.getElementById('eventSuggestions');
+let suggTimer = null;
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function clearSuggestions(){
+  if (!suggBox) return;
+  suggBox.style.display = 'none';
+  suggBox.innerHTML = '';
+}
+
+function showSuggestions(items){
+  if (!suggBox) return;
+  if (!items || !items.length){
+    clearSuggestions();
+    return;
+  }
+
+  suggBox.innerHTML = items.map(it => {
+    const label  = it.label  || '';
+    const league = it.league || '';
+    const date   = it.date   || '';
+
+    let dateStr = '';
+    if (date){
+      const d = new Date(date);
+      if (!isNaN(d)) {
+        dateStr = d.toLocaleString('en-GB', {
+          day:'2-digit', month:'short',
+          hour:'2-digit', minute:'2-digit'
+        });
+      }
+    }
+
+    return `
+      <div class="suggestion-item"
+           data-label="${escapeHtml(label)}"
+           data-league="${escapeHtml(league)}"
+           data-date="${escapeHtml(dateStr)}">
+        ${escapeHtml(label)}
+        ${dateStr ? `<span class="tiny muted"> (${escapeHtml(league)} ${escapeHtml(dateStr)})</span>` : ''}
+      </div>`;
+  }).join('');
+
+  suggBox.style.display = 'block';
+}
+
+if (eventEl && suggBox) {
+  eventEl.addEventListener('input', () => {
+    const q = eventEl.value.trim();
+
+    if (suggTimer) clearTimeout(suggTimer);
+
+    if (q.length < 3){
+      clearSuggestions();
+      return;
+    }
+
+    suggTimer = setTimeout(async () => {
+      try {
+        const res = await fetch('fixtures_search.php?q=' + encodeURIComponent(q));
+        const data = await res.json();
+        showSuggestions(data);
+      } catch (e) {
+        console.error('Suggestion error', e);
+        clearSuggestions();
+      }
+    }, 250);
+  });
+
+  suggBox.addEventListener('click', (ev) => {
+    const item = ev.target.closest('.suggestion-item');
+    if (!item) return;
+
+    const label = item.getAttribute('data-label') || '';
+    eventEl.value = label;
+
+    clearSuggestions();
+  });
+
+  // hide when clicking away
+  document.addEventListener('click', (ev) => {
+    if (ev.target === eventEl) return;
+    if (!suggBox.contains(ev.target)) {
+      clearSuggestions();
+    }
+  });
+}
+
+
+  // Initial run
+  recalc();
+</script>
+</body>
+</html>

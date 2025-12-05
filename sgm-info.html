@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Same Game Multiples – Guide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg1:#04394a; --bg2:#021e28; --panel:#002d3c; --line:#0e586d;
+      --ink:#e6faff; --accent:#7ce3f0;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:'Ubuntu',sans-serif;
+      background: radial-gradient(circle at 50% 30%, var(--bg1), var(--bg2) 80%);
+      color:var(--ink);
+      margin:0;
+      min-height:100vh;
+    }
+    .shell{
+      max-width:1100px;
+      margin:1.5rem auto 2rem;
+      padding:1.25rem 1.5rem 1.5rem;
+      background:rgba(0,45,60,.90);
+      border-radius:16px;
+      border:1px solid var(--line);
+      box-shadow:0 0 40px rgba(0,0,0,.45);
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+      margin-bottom:.75rem;
+    }
+    h1.page-title{
+      margin:0;
+      font-size:1.7rem;
+      color:var(--accent);
+    }
+    .backlink{
+      text-decoration:none;
+      font-size:.9rem;
+      padding:.4rem .8rem;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#024457;
+      color:var(--ink);
+      white-space:nowrap;
+    }
+    .backlink:hover{
+      filter:brightness(1.1);
+    }
+    .content{
+      max-height:75vh;
+      overflow:auto;
+      padding-right:.4rem;
+    }
+    .content h1{
+      font-size:1.25rem;
+      margin:1rem 0 .4rem;
+      color:var(--accent);
+    }
+    .content p{
+      line-height:1.5;
+      margin:.35rem 0;
+      font-size:.95rem;
+    }
+    .content strong{
+      color:var(--accent);
+    }
+    .content table{
+      width:100%;
+      border-collapse:collapse;
+      margin:.75rem 0 1rem;
+      font-size:.9rem;
+      background:rgba(3,50,65,0.7);
+    }
+    .content th,
+    .content td{
+      padding:.4rem .55rem;
+      border:1px solid rgba(14,88,109,0.7);
+      text-align:left;
+      vertical-align:top;
+    }
+    .content thead{
+      background:rgba(4,57,74,0.95);
+    }
+    .content tbody tr:nth-child(even){
+      background:rgba(1,25,35,0.65);
+    }
+    .content ul{
+      margin:.35rem 0 .35rem 1.1rem;
+      padding:0;
+    }
+    .content li{
+      margin:.15rem 0;
+    }
+    @media (max-width:700px){
+      .shell{margin:0.75rem; padding:1rem;}
+      .content{max-height:none;}
+      h1.page-title{font-size:1.4rem;}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <h1 class="page-title">BetBuilder – Info</h1>
+      <a href="index.html" class="backlink">← Back to Calculator</a>
+    </div>
+
+    <div class="content" component="post/content" itemprop="text">
+      <p dir="auto"><strong>2-Leg Bet Builders</strong></p>
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Back</th>
+            <th>Lay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>England to Win, Over 0.5 Goals</td><td>England</td></tr>
+          <tr><td>England to Win, Over 0.5 England Goals</td><td>England</td></tr>
+          <tr><td>Draw, Correct Score 0-0</td><td>Correct Score Market: 0-0</td></tr>
+          <tr><td>Draw, Both Teams to Score - No</td><td>Correct Score Market: 0-0</td></tr>
+          <tr><td>England Under 0.5 Goals, Wales Under 0.5 Goals</td><td>Correct Score Market: 0-0</td></tr>
+          <tr><td>England to Win, Correct Score England 1-0</td><td>Correct Score Market: England 1-0</td></tr>
+          <tr><td>England to Win, Under 1.5 Goals</td><td>Correct Score Market: England 1-0</td></tr>
+          <tr><td>Draw, Correct Score 1-1</td><td>Correct Score Market: 1-1</td></tr>
+          <tr><td>Both Teams to Score, Under 2.5 Goals</td><td>Correct Score Market: 1-1</td></tr>
+          <tr><td>England to Win, Correct Score England 2-1</td><td>Correct Score Market: England 2-1</td></tr>
+          <tr><td>Over 0.5 England Goals, Over 0.5 Wales Goals</td><td>Both Teams to Score - Yes</td></tr>
+          <tr><td>England to Win, Over/Under x Goals</td><td>England and Over/Under x Goals</td></tr>
+          <tr><td>England to Win, Both Teams to Score</td><td>England/Both Teams to Score - Yes</td></tr>
+          <tr><td>England to Win, Both Teams to Score - No</td><td>England/Both Teams to Score - No</td></tr>
+          <tr><td>Draw, Draw Half Time Result</td><td>Half Time/Full Time Market: Draw/Draw</td></tr>
+          <tr><td>England to Win, England Half Time Result</td><td>Half Time/Full Time Market: Home/Home</td></tr>
+          <tr><td>England to Win, Draw Half Time Result</td><td>Half Time/Full Time Market: Draw/Home</td></tr>
+          <tr><td>Draw, England Half Time Result</td><td>Half Time/Full Time Market: Home/Draw</td></tr>
+          <tr><td>Harry Kane Anytime Goalscorer, Harry Kane Over 0.5 Shots on Target</td><td>Harry Kane Anytime Goalscorer</td></tr>
+          <tr><td>Harry Kane Anytime Goalscorer, Over 0.5 Goals</td><td>Anytime Goalscorer Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane Anytime Goalscorer, Over 0.5 England Goals</td><td>Anytime Goalscorer Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane First Goalscorer, Over 0.5 Goals</td><td>First Goalscorer Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane First Goalscorer, Over 0.5 England Goals</td><td>First Goalscorer Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane to Score 2+ Goals, Over 0.5 Goals</td><td>Player to Score 2 or More Goals Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane to Score 2+ Goals, Over 1.5 Goals</td><td>Player to Score 2 or More Goals Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane to Score 2+ Goals, Over 0.5 England Goals</td><td>Player to Score 2 or More Goals Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane to Score 2+ Goals, Over 1.5 England Goals</td><td>Player to Score 2 or More Goals Market: Harry Kane</td></tr>
+        </tbody>
+      </table>
+
+      <p dir="auto"><strong>3-Leg Bet Builders</strong></p>
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Back</th>
+            <th>Lay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>England to Win, Over 0.5 Goals, Over 0.5 England Goals</td><td>England</td></tr>
+          <tr><td>England to Win, Both Teams to Score - No, Under 1.5 Goals</td><td>Correct Score Market: England 1-0</td></tr>
+          <tr><td>Draw, Both Teams to Score, Under 2.5 Goals</td><td>Correct Score Market: 1-1</td></tr>
+          <tr><td>England to Win, Both Teams to Score - No, Correct Score 2-0 to England</td><td>Correct Score Market: England 2-0</td></tr>
+          <tr><td>England to Win, Both Teams to Score, Under 3.5 Goals</td><td>Correct Score Market: England 2-1</td></tr>
+          <tr><td>England Win, Both Teams to Score - No, Correct Score 3-0 to England</td><td>Correct Score Market: England 3-0</td></tr>
+          <tr><td>England to Win, Both Teams to Score, Over 2.5 Goals</td><td>England/Both Teams to Score - Yes</td></tr>
+          <tr><td>Draw, England Half Time Result, Over 1.5 Goals</td><td>Half Time/Full Time Market: Home/Draw</td></tr>
+          <tr><td>Harry Kane Anytime Goalscorer, Over 0.5 Goals, Over 0.5 England Goals</td><td>Anytime Goalscorer Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane First Goalscorer, Over 0.5 Goals, Over 0.5 England Goals</td><td>First Goalscorer Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane to Score 2+ Goals, Over 0.5 Goals, Over 0.5 England Goals</td><td>Player to Score 2 or More Goals Market: Harry Kane</td></tr>
+        </tbody>
+      </table>
+
+      <p dir="auto"><strong>4-Leg Bet Builders</strong></p>
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Back</th>
+            <th>Lay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>England Under 0.5 First Half Goals, Wales Under 0.5 First Half Goals, England Under 0.5 Second Half Goals, Wales Under 0.5 Second Half Goals</td><td>Correct Score Market: England 0-0</td></tr>
+          <tr><td>England to Win, Over 0.5 Goals, Under 1.5 Goals, Both Teams to Score - No</td><td>Correct Score Market: England 1-0</td></tr>
+          <tr><td>Draw, Over 1.5 Goals, Under 2.5 Goals, Both Teams to Score</td><td>Correct Score Market: 1-1</td></tr>
+          <tr><td>England to Win, Over 1.5 Goals, Under 2.5 Goals, Both Teams to Score - No</td><td>Correct Score Market: England 2-0</td></tr>
+          <tr><td>England to Win, Over 2.5 Goals, Under 3.5 Goals, Both Teams to Score</td><td>Correct Score Market: England 2-1</td></tr>
+          <tr><td>Team to Win, Over 2.5 Goals, Under 3.5 Goals, Both Teams to Score - No</td><td>Correct Score Market: England 3-0</td></tr>
+          <tr><td>England to Win, Over 2.5 Goals, Under 3.5 Goals, England to Win by Exactly 3 Goals</td><td>Correct Score Market: England 3-0</td></tr>
+          <tr><td>England to Win, Over 0.5 Goals, Over 0.5 England Goals, Both Teams to Score</td><td>England/Both Teams to Score</td></tr>
+          <tr><td>Harry Kane Anytime Goalscorer, Harry Kane Over 0.5 Shots on Target, Over 0.5 Goals, Over 0.5 England Goals</td><td>Anytime Goalscorer Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane First Goalscorer, Harry Kane Over 0.5 Shots on Target, Over 0.5 Goals, Over 0.5 England Goals</td><td>First Goalscorer Market: Harry Kane</td></tr>
+          <tr><td>Harry Kane to Score 2+ Goals, Harry Kane Over 0.5 Shots on Target, Over 0.5 Goals, Over 0.5 England Goals</td><td>Player to Score 2 or More Goals Market: Harry Kane</td></tr>
+        </tbody>
+      </table>
+
+      <p dir="auto"><strong>5-Leg Bet Builders</strong></p>
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Back</th>
+            <th>Lay</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Draw, Under 0.5 England Goals, Under 0.5 Wales Goals, Both Teams to Score - No, Correct Score 0-0</td><td>Correct Score Market: 0-0</td></tr>
+          <tr><td>Draw, Over 0.5 England Goals, Over 0.5 Wales Goals, Both Teams to Score, Correct Score 1-1</td><td>Correct Score Market: 1-1</td></tr>
+          <tr><td>Draw, Over 1.5 Goals, Under 2.5 Goals, Both Teams to Score, Correct Score 1-1</td><td>Correct Score Market: 1-1</td></tr>
+          <tr><td>England to Win, Over 2.5 Goals, Under 3.5 Goals, Both Teams to Score, Correct Score England 2-1</td><td>Correct Score Market: England 2-1</td></tr>
+          <tr><td>England to Win, Over 2.5 Goals, Under 3.5 Goals, England to Win by Exactly 3 Goals, Both Teams to Score - No</td><td>Correct Score Market: England 3-0</td></tr>
+          <tr><td>England to Win, Over 0.5 Goals, Over 0.5 England Goals, Over 0.5 Wales Goals, Both Teams to Score</td><td>England/Both Teams to Score - Yes</td></tr>
+          <tr><td>England to Win, England Half Time Result, Over 0.5 Goals, Over 0.5 England Goals, Over 0.5 First Half Goals</td><td>Half Time/Full Time Market: Home/Home</td></tr>
+          <tr><td>Harry Kane to Score 2+ Goals, Harry Kane Over 0.5 Shots on Target, Over 0.5 Goals, Over 1.5 Goals, Over 0.5 England Goals</td><td>Player to Score 2 or More Goals Market: Harry Kane</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

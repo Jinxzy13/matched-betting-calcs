@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sequential Lay ACCA Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg1:#04394a; --bg2:#021e28; --panel:#002d3c; --line:#0e586d;
+      --ink:#e6faff; --accent:#7ce3f0; --btn1:#16b7c5; --btn2:#109aa6;
+      --win:#2ed47a; --loss:#ff6b6b; --muted:rgba(230,250,255,0.7);
+    }
+    *{box-sizing:border-box}
+    body{
+  font-family:'Ubuntu',sans-serif;
+  background: radial-gradient(circle at 50% 30%, var(--bg1), var(--bg2) 80%);
+  color:var(--ink);
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;       /* stack children vertically */
+  align-items:center;          /* centre horizontally */
+  justify-content:flex-start;  /* start at top, not middle */
+  text-align:center;
+}
+
+
+   .wrap{
+  background:rgba(0,45,60,.9);
+  border-radius:16px;
+  border:1px solid var(--line);
+  width:min(1000px,96vw);
+  padding:1.25rem 1.5rem 1.6rem;
+  box-shadow:0 0 40px rgba(0,0,0,.4);
+  margin:1.5rem auto;
+}
+    h1{
+      margin:.1rem 0 .4rem;
+      font-size:1.6rem;
+      color:var(--accent);
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      gap:.75rem;
+      flex-wrap:wrap;
+      font-size:.9rem;
+      color:var(--muted);
+    }
+    .controls{
+      margin-top:.8rem;
+      padding:.75rem;
+      border-radius:12px;
+      background:#021e28;
+      border:1px solid var(--line);
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:.75rem .9rem;
+      align-items:flex-end;
+      font-size:.9rem;
+    }
+    label{display:block;}
+    select,input{
+      width:100%;
+      margin-top:.15rem;
+      padding:.38rem .55rem;
+      border-radius:6px;
+      border:1px solid #094a5d;
+      background:#012733;
+      color:var(--ink);
+      font-family:inherit;
+      font-size:.95rem;
+    }
+    input[type="number"]{text-align:right;}
+    input[readonly]{opacity:.9;}
+    button{
+      background:linear-gradient(180deg,var(--btn1),var(--btn2));
+      color:#00252b;
+      border:none;
+      border-radius:10px;
+      padding:.55rem .9rem;
+      font-weight:700;
+      font-size:.95rem;
+      cursor:pointer;
+    }
+    button:hover{filter:brightness(1.08);}
+    .btn-ghost{
+      background:transparent;
+      border:1px solid var(--line);
+      color:var(--ink);
+    }
+    .grid-legs{
+      margin-top:1rem;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#032633;
+      overflow:hidden;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:.88rem;
+    }
+    thead{
+      background:#04394a;
+    }
+    th,td{
+      padding:.4rem .45rem;
+      border-bottom:1px solid rgba(14,88,109,.6);
+      text-align:right;
+      white-space:nowrap;
+    }
+    th:first-child,td:first-child{text-align:left;}
+    th{color:var(--accent); font-weight:600;}
+    tbody tr:nth-child(odd){background:rgba(0,0,0,.03);}
+    .leg-num{
+      display:inline-flex;
+      width:22px; height:22px;
+      align-items:center; justify-content:center;
+      border-radius:999px;
+      border:1px solid var(--accent);
+      font-size:.78rem;
+    }
+    .summary{
+      margin-top:.75rem;
+      font-size:.9rem;
+      display:flex;
+      flex-wrap:wrap;
+      gap:1rem;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .summary strong{color:var(--accent);}
+    .results-box{
+      margin-top:1rem;
+      border-radius:12px;
+      border:1px dashed var(--line);
+      padding:.7rem .8rem;
+      background:#021b25;
+      font-size:.88rem;
+    }
+    .results-box h2{
+      margin:.1rem 0 .5rem;
+      font-size:1.05rem;
+      color:var(--accent);
+    }
+    .results-table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:.86rem;
+    }
+    .results-table th,.results-table td{
+      padding:.3rem .35rem;
+      border-bottom:1px solid rgba(14,88,109,.4);
+      text-align:right;
+    }
+    .results-table th:first-child,
+    .results-table td:first-child{text-align:left;}
+    .pill-path{
+      display:inline-block;
+      padding:.08rem .45rem;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:.78rem;
+    }
+    .pl-win{color:var(--win); font-weight:700;}
+    .pl-loss{color:var(--loss); font-weight:700;}
+    .muted{color:var(--muted);}
+    .error{
+      margin-top:.5rem;
+      color:var(--loss);
+      font-size:.86rem;
+    }
+    @media (max-width:720px){
+      h1{font-size:1.35rem;}
+      .topbar{font-size:.82rem;}
+      th,td{font-size:.8rem;}
+    }
+.topnav {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0 12px;
+  background: rgba(0, 0, 0, 0.32);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.topnav a {
+  font-weight: 500;
+  text-decoration: none;
+  margin: 0 14px;
+  color: #7ce3f0;
+  font-size: 1rem;
+}
+
+.topnav a:hover {
+  text-decoration: underline;
+}
+
+  </style>
+</head>
+<body>
+<div class="topnav">
+    <a href="index.html">Main Calculator</a>
+    <a href="oddsmatcher.html">Odds Matcher</a>
+    <a href="refund.html">Risk Free</a>
+    <a href="acca.html">Acca</a>
+    <a href="ep.html" class="active">Extra Place</a>
+    <a href="early.html">Early Payout</a>
+    <a href="betbuilder.html">Bet Builder</a>
+</div>
+
+<div class="wrap">
+  <h1>Sequential Lay Calculator</h1>
+  <div class="topbar">
+    <div>Lay each leg of your ACCA sequentially and see profits for every path.</div>
+    <div>Mode: <span id="modeLabel">Standard</span> • Bet type: <span id="betTypeLabel">Normal</span></div>
+  </div>
+
+  <div class="controls">
+    <label>
+      Bet type
+      <select id="betType">
+        <option value="normal">Normal</option>
+        <option value="snr">Free Bet (SNR)</option>
+      </select>
+    </label>
+
+    <label>
+      Mode
+      <select id="mode">
+        <option value="standard">Standard</option>
+        <option value="underlay">Underlay</option>
+      </select>
+    </label>
+
+    <label id="underlayWrap" style="display:none;">
+      Underlay target (% of stake)
+      <input type="number" id="underlayTarget" value="100" step="1" />
+    </label>
+
+    <label>
+      Back stake (£)
+      <input type="number" id="backStake" step="1" min="0" placeholder="Stake" />
+    </label>
+
+    <label>
+      Back odds (ACCA total)
+      <input type="number" id="backOdds" step="0.01" min="1.01" placeholder="e.g. 20.92" />
+    </label>
+
+    <label>
+      Legs
+      <select id="legs">
+        <option value="2">Double (2)</option>
+        <option value="3" selected>Treble (3)</option>
+        <option value="4">Four Fold (4)</option>
+        <option value="5">Five Fold (5)</option>
+        <option value="6">Six Fold (6)</option>
+      </select>
+    </label>
+
+    <label>
+      Back commission (%)
+      <input type="number" id="backComm" value="0" step="0.01" />
+    </label>
+
+    <div style="display:flex; gap:.5rem; justify-content:flex-end;">
+      <button id="calcBtn" type="button">Calculate</button>
+      <button type="button" class="btn-ghost" id="resetBtn">Reset</button>
+    </div>
+  </div>
+
+  
+  <div class="grid-legs">
+    <table>
+      <thead>
+        <tr>
+          <th>Leg</th>
+          <th>Lay odds</th>
+          <th>Commission %</th>
+          <th>Recommended stake (£)</th>
+          <th>Actual stake (£)</th>
+        </tr>
+      </thead>
+      <tbody id="legsBody">
+        <tr data-leg="1">
+          <td><span class="leg-num">1</span></td>
+          <td><input type="number" step="0.01" min="1.01" id="layOdds1" placeholder="Lay odds"></td>
+          <td><input type="number" step="0.01" min="0"   id="layComm1" value="0"></td>
+          <td><input type="number" step="0.01" id="recStake1" readonly></td>
+          <td><input type="number" step="0.01" id="actStake1"></td>
+        </tr>
+        <tr data-leg="2">
+          <td><span class="leg-num">2</span></td>
+          <td><input type="number" step="0.01" min="1.01" id="layOdds2" placeholder="Lay odds"></td>
+          <td><input type="number" step="0.01" min="0"   id="layComm2" value="0"></td>
+          <td><input type="number" step="0.01" id="recStake2" readonly></td>
+          <td><input type="number" step="0.01" id="actStake2"></td>
+        </tr>
+        <tr data-leg="3">
+          <td><span class="leg-num">3</span></td>
+          <td><input type="number" step="0.01" min="1.01" id="layOdds3" placeholder="Lay odds"></td>
+          <td><input type="number" step="0.01" min="0"   id="layComm3" value="0"></td>
+          <td><input type="number" step="0.01" id="recStake3" readonly></td>
+          <td><input type="number" step="0.01" id="actStake3"></td>
+        </tr>
+        <tr data-leg="4">
+          <td><span class="leg-num">4</span></td>
+          <td><input type="number" step="0.01" min="1.01" id="layOdds4" placeholder="Lay odds"></td>
+          <td><input type="number" step="0.01" min="0"   id="layComm4" value="0"></td>
+          <td><input type="number" step="0.01" id="recStake4" readonly></td>
+          <td><input type="number" step="0.01" id="actStake4"></td>
+        </tr>
+        <tr data-leg="5">
+          <td><span class="leg-num">5</span></td>
+          <td><input type="number" step="0.01" min="1.01" id="layOdds5" placeholder="Lay odds"></td>
+          <td><input type="number" step="0.01" min="0"   id="layComm5" value="0"></td>
+          <td><input type="number" step="0.01" id="recStake5" readonly></td>
+          <td><input type="number" step="0.01" id="actStake5"></td>
+        </tr>
+        <tr data-leg="6">
+          <td><span class="leg-num">6</span></td>
+          <td><input type="number" step="0.01" min="1.01" id="layOdds6" placeholder="Lay odds"></td>
+          <td><input type="number" step="0.01" min="0"   id="layComm6" value="0"></td>
+          <td><input type="number" step="0.01" id="recStake6" readonly></td>
+          <td><input type="number" step="0.01" id="actStake6"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="summary">
+    <div>
+      <strong>Combined lay odds:</strong>
+      <span id="combinedOdds">–</span>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <strong>Total exchange liability:</strong>
+      £<span id="totalLiab">0.00</span>
+    </div>
+    <div class="muted" id="ratingLine"></div>
+  </div>
+
+  <div class="results-box">
+    <h2>Result breakdown</h2>
+    <table class="results-table" id="resultsTable">
+      <thead>
+        <tr>
+          <th>Path</th>
+          <th>Bookmaker</th>
+          <th>Exchange</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody">
+      </tbody>
+    </table>
+  </div>
+
+  <div id="errorBox" class="error"></div>
+</div>
+
+<script>
+(function(){
+  const MAX_LEGS = 6;
+  const $ = id => document.getElementById(id);
+
+  const betTypeEl = $('betType');
+  const modeEl = $('mode');
+  const underlayWrap = $('underlayWrap');
+  const underlayTargetEl = $('underlayTarget');
+  const backStakeEl = $('backStake');
+  const backOddsEl = $('backOdds');
+  const legsEl = $('legs');
+  const combinedOddsEl = $('combinedOdds');
+  const totalLiabEl = $('totalLiab');
+  const ratingLineEl = $('ratingLine');
+  const resultsBody = $('resultsBody');
+  const errorBox = $('errorBox');
+  const modeLabel = $('modeLabel');
+  const betTypeLabel = $('betTypeLabel');
+
+  function money(x){
+    const n = isFinite(x) ? Math.round(x*100)/100 : 0;
+    return n.toFixed(2);
+  }
+
+  function clearOutputs(){
+    combinedOddsEl.textContent = '–';
+    totalLiabEl.textContent = '0.00';
+    ratingLineEl.textContent = '';
+    resultsBody.innerHTML = '';
+    const legs = parseInt(legsEl.value,10) || 2;
+    for(let i=1;i<=MAX_LEGS;i++){
+      const recInput = $('recStake'+i);
+      const actInput = $('actStake'+i);
+      if(recInput){
+        if(i<=legs){
+          recInput.value = '';
+          // don't force actual stake – user might type later
+        }else{
+          recInput.value = '';
+          actInput.value = '';
+        }
+      }
+    }
+  }
+
+  function showLegRows(){
+    const wanted = parseInt(legsEl.value,10) || 2;
+    const tbody = document.getElementById('legsBody');
+    [...tbody.querySelectorAll('tr')].forEach(tr=>{
+      const leg = parseInt(tr.getAttribute('data-leg'),10);
+      tr.style.display = leg <= wanted ? '' : 'none';
+    });
+  }
+
+  function stakesFromTarget(T, baseLoss, lays, comms){
+    const stakes = [];
+    for(let j=0;j<lays.length;j++){
+      const L = lays[j];
+      const c = comms[j];
+      const denom = (1 - c) || 1e-9;
+      if(j===0){
+        const num = T - baseLoss;
+        stakes.push(num/denom);
+      }else{
+        let sum = 0;
+        for(let k=0;k<j;k++){
+          sum += (lays[k]-1)*stakes[k];
+        }
+        const num = T - baseLoss + sum;
+        stakes.push(num/denom);
+      }
+    }
+    return stakes;
+  }
+
+  function profitAllWin(T, baseLoss, W, lays, comms){
+    const stakes = stakesFromTarget(T, baseLoss, lays, comms);
+    let liab = 0;
+    for(let i=0;i<lays.length;i++){
+      liab += (lays[i]-1)*stakes[i];
+    }
+    const profit = W - liab;
+    return { profit, stakes, liab };
+  }
+
+  function buildScenarios(B, OB, betType, lays, comms, stakes){
+    const n = lays.length;
+    const profWin = stakes.map((s,i)=> -(lays[i]-1)*s);
+    const profLose = stakes.map((s,i)=> s*(1 - comms[i]));
+
+    const baseLoss = (betType === 'normal') ? -B : 0;
+    const winProfit = B * (OB - 1);
+    const out = [];
+
+    // lose at leg k
+    for(let k=0;k<n;k++){
+      let book = baseLoss;
+      let exch = 0;
+      const path = [];
+      for(let j=0;j<k;j++){
+        path.push('W');
+        exch += profWin[j];
+      }
+      path.push('L');
+      exch += profLose[k];
+      out.push({ path, book, exch, total: book+exch });
+    }
+
+    // all win
+    let book = winProfit;
+    let exch = 0;
+    const path = [];
+    for(let j=0;j<n;j++){
+      path.push('W');
+      exch += profWin[j];
+    }
+    out.push({ path, book, exch, total: book+exch });
+
+    return out;
+  }
+
+  // showErrors = true only when pressing Calculate
+  function recalc(showErrors){
+    if(!showErrors) errorBox.textContent = '';
+
+    clearOutputs();
+
+    const betType = betTypeEl.value;
+    const mode = modeEl.value;
+    const legs = parseInt(legsEl.value,10) || 2;
+
+    const Bstr = backStakeEl.value;
+    const OBstr = backOddsEl.value;
+
+    // Wait until user has filled basic fields
+    if(!Bstr || !OBstr){
+      if(showErrors){
+        errorBox.textContent = 'Please enter a back stake and back odds.';
+      }
+      return;
+    }
+
+    const B = parseFloat(Bstr);
+    const OB = parseFloat(OBstr);
+
+    if(!(B>=0) || !(OB>1)){
+      if(showErrors){
+        errorBox.textContent = 'Please enter a valid back stake and odds.';
+      }
+      return;
+    }
+
+    const lays = [];
+    const comms = [];
+    for(let i=1;i<=legs;i++){
+      const Lstr = $('layOdds'+i).value;
+      if(!Lstr){
+        if(showErrors){
+          errorBox.textContent = 'Please fill in lay odds for all active legs.';
+        }
+        return;
+      }
+      const L = parseFloat(Lstr);
+      const cPct = parseFloat($('layComm'+i).value) || 0;
+      if(!(L>1)){
+        if(showErrors){
+          errorBox.textContent = 'Lay odds must be greater than 1 for all active legs.';
+        }
+        return;
+      }
+      lays.push(L);
+      comms.push(Math.max(0,cPct)/100);
+    }
+
+    const baseLoss = (betType === 'normal') ? -B : 0;
+    const W = B * (OB - 1);
+
+    let recStakes = [];
+    let liab = 0;
+    let Tused = 0;
+
+    if(mode === 'underlay'){
+      let tPct = parseFloat(underlayTargetEl.value);
+      if(!isFinite(tPct)) tPct = 100;
+      if(betType === 'normal'){
+        Tused = B*(tPct/100 - 1);
+      }else{
+        Tused = B*(tPct/100);
+      }
+      const res = profitAllWin(Tused, baseLoss, W, lays, comms);
+      recStakes = res.stakes;
+      liab = res.liab;
+    }else{
+      const r0 = profitAllWin(0, baseLoss, W, lays, comms);
+      const r1 = profitAllWin(1, baseLoss, W, lays, comms);
+      const P0 = r0.profit;
+      const P1 = r1.profit;
+      const denom = (P1 - P0 - 1);
+      let T = 0;
+      if(Math.abs(denom) >= 1e-9){
+        T = -P0 / denom;
+      }
+      const rEq = profitAllWin(T, baseLoss, W, lays, comms);
+      Tused = T;
+      recStakes = rEq.stakes;
+      liab = rEq.liab;
+    }
+
+    // Recommended and actual stakes
+    for(let i=1;i<=MAX_LEGS;i++){
+      const recInput = $('recStake'+i);
+      const actInput = $('actStake'+i);
+      if(i<=legs){
+        const rs = recStakes[i-1] || 0;
+        recInput.value = money(rs);
+        // only auto-fill actual stake the first time if it is empty
+        if(!actInput.value){
+          actInput.value = money(rs);
+        }
+        recInput.parentElement.parentElement.style.display='';
+      }else{
+        recInput.parentElement.parentElement.style.display='none';
+      }
+    }
+
+    // Liability & combined odds from actual stakes
+    const actStakes = [];
+    let totalLiab = 0;
+    for(let i=1;i<=legs;i++){
+      const val = parseFloat($('actStake'+i).value) || 0;
+      actStakes.push(val);
+      totalLiab += (lays[i-1]-1)*val;
+    }
+    totalLiabEl.textContent = money(totalLiab);
+
+    if(actStakes[0] > 0){
+      const comb = 1 + totalLiab / actStakes[0];
+      combinedOddsEl.textContent = comb.toFixed(2);
+    }
+
+    // Rating line
+    const worstT = Tused;
+    let labelRating = '';
+    if(betType === 'normal' && B>0){
+      const eff = 100*(1 + worstT/B);
+      labelRating = `Approx rating (worst-case vs stake): ${eff.toFixed(2)}%`;
+    }else if(betType === 'snr' && B>0){
+      const eff = 100*(worstT/B);
+      labelRating = `Free bet return (worst losing path): ${eff.toFixed(2)}% of stake`;
+    }
+    ratingLineEl.textContent = labelRating;
+
+    const scenarios = buildScenarios(B, OB, betType, lays, comms, actStakes);
+
+    resultsBody.innerHTML = scenarios.map(s=>{
+      const pathStr = s.path.join(' ');
+      const bookStr = '£'+money(s.book);
+      const exStr   = (s.exch>=0?'+£':'-£') + money(Math.abs(s.exch));
+      const totStr  = (s.total>=0?'+£':'-£') + money(Math.abs(s.total));
+      const cls = s.total>=0 ? 'pl-win':'pl-loss';
+      return `<tr>
+        <td><span class="pill-path">${pathStr}</span></td>
+        <td>${bookStr}</td>
+        <td>${exStr}</td>
+        <td class="${cls}">${totStr}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  $('calcBtn').addEventListener('click', ()=>recalc(true));
+
+  $('resetBtn').addEventListener('click', ()=>{
+    backStakeEl.value = '';
+    backOddsEl.value = '';
+    betTypeEl.value = 'normal';
+    modeEl.value = 'standard';
+    underlayTargetEl.value = 100;
+    legsEl.value = 3;
+    ['layOdds1','layOdds2','layOdds3','layOdds4','layOdds5','layOdds6'].forEach(id=>{
+      const el = $(id); if(el) el.value = '';
+    });
+    ['actStake1','actStake2','actStake3','actStake4','actStake5','actStake6'].forEach(id=>{
+      const el = $(id); if(el) el.value = '';
+    });
+    showLegRows();
+    clearOutputs();
+    modeLabel.textContent = 'Standard';
+    betTypeLabel.textContent = 'Normal';
+    underlayWrap.style.display = 'none';
+    errorBox.textContent = '';
+  });
+
+  betTypeEl.addEventListener('change', ()=>{
+    betTypeLabel.textContent = betTypeEl.value === 'snr' ? 'Free Bet (SNR)' : 'Normal';
+    recalc(false);
+  });
+
+  modeEl.addEventListener('change', ()=>{
+    const isUnder = modeEl.value === 'underlay';
+    underlayWrap.style.display = isUnder ? '' : 'none';
+    modeLabel.textContent = isUnder ? 'Underlay' : 'Standard';
+    recalc(false);
+  });
+
+  legsEl.addEventListener('change', ()=>{ showLegRows(); recalc(false); });
+  underlayTargetEl.addEventListener('input', ()=>recalc(false));
+  backStakeEl.addEventListener('input', ()=>recalc(false));
+  backOddsEl.addEventListener('input', ()=>recalc(false));
+
+  for(let i=1;i<=MAX_LEGS;i++){
+    $('layOdds'+i).addEventListener('input', ()=>recalc(false));
+    $('layComm'+i).addEventListener('input', ()=>recalc(false));
+    $('actStake'+i).addEventListener('input', ()=>recalc(false));
+  }
+
+  // initial state
+  showLegRows();
+  clearOutputs();
+})();
+</script>
+</body>
+</html>

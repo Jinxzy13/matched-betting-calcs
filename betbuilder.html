@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bet Builder Helper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root{
+      --bg1:#04394a; --bg2:#021e28; --panel:#002d3c; --line:#0e586d;
+      --ink:#e6faff; --accent:#7ce3f0; --btn1:#16b7c5; --btn2:#109aa6;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0; padding:0;
+      font-family:"Ubuntu",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink);
+      background:radial-gradient(circle at top,var(--bg1),var(--bg2));
+    }
+    body{
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:1rem;
+    }
+    .shell{
+      width:100%;
+      max-width:1200px;
+      padding:1rem;
+      border-radius:18px;
+      background:rgba(0,0,0,.2);
+      box-shadow:0 18px 40px rgba(0,0,0,.6);
+    }
+    header{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+      margin-bottom:1rem;
+    }
+    header h1{
+      margin:0;
+      font-size:1.4rem;
+      letter-spacing:.03em;
+    }
+    header small{
+      opacity:.85;
+      font-size:.9rem;
+    }
+    .navlinks{
+      display:flex;
+      flex-wrap:wrap;
+      gap:.5rem;
+    }
+    .navlinks a{
+      text-decoration:none;
+      color:var(--accent);
+      font-size:.88rem;
+      padding:.25rem .6rem;
+      border-radius:999px;
+      border:1px solid rgba(124,227,240,.45);
+    }
+
+    .card{
+      background:rgba(0,0,0,.25);
+      border-radius:16px;
+      border:1px solid rgba(10,100,125,.9);
+      padding:1rem;
+    }
+
+    .helper-intro{
+      font-size:.9rem;
+      opacity:.9;
+      margin-bottom:.75rem;
+    }
+
+    /* table wrapper */
+    .table-wrapper{
+      width:100%;
+      overflow-x:auto;
+    }
+
+    /* Bet Builder Helper table */
+
+    .bb-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      color: var(--ink);
+      font-size: 0.9rem;
+    }
+
+    /* Header row */
+    .bb-table thead th {
+      padding: 6px 10px;
+      text-align: center;
+      font-weight: 600;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid #024459;
+      background: linear-gradient(to bottom, #2a9ac7, #1b6f93);
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .bb-table thead th:first-child {
+      border-left: 1px solid #024459;
+    }
+
+/* Lay Bet header (red like Risk-Free calculator) */
+.bb-table thead th:nth-child(5) {
+  background: #7c1216;
+  background: linear-gradient(
+    to bottom,
+    #99171c 0%,   /* lighter red */
+    #7c1216 100%  /* deep red */
+  );
+  color: #fff;
+  border-left: 2px solid #5e0c0f;
+  border-right: 2px solid #5e0c0f;
+}
+
+
+    /* Body cells */
+    .bb-table tbody td {
+      padding: 6px 10px;
+      text-align: center;
+      border-top: 1px solid #024459;
+      border-right: 1px solid #024459;
+      color: var(--ink);
+    }
+
+    /* Left border on first column */
+    .bb-table tbody td:first-child {
+      border-left: 1px solid #024459;
+    }
+
+    /* Zebra striping for readability */
+    .bb-table tbody tr:nth-child(odd) {
+      background-color: rgba(1, 45, 60, 0.95);   /* darker */
+    }
+
+    .bb-table tbody tr:nth-child(even) {
+      background-color: rgba(3, 70, 90, 0.95);   /* slightly lighter */
+    }
+
+    /* Lay Bet column body cells */
+    .bb-table tbody td.layCell {
+      font-weight: 700;
+      color: #ffd6db;  /* soft pink against red header */
+    }
+
+    /* Lay Bet text if you wrap it in <b> */
+    .bb-table .layCell b {
+      color: #ffd6db;
+      font-weight: 700;
+    }
+
+/* Filters row + pretty dropdowns */
+.filters-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem;
+  margin-bottom:1rem;
+}
+
+/* Style the selects whether or not they’re inside .filters-row */
+.filters-row select,
+#regionDropdown,
+#roleDropdown {
+  padding:.45rem .9rem;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#02232f;
+  color:var(--ink);
+  font-size:.9rem;
+  min-width:200px;
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  box-shadow:0 0 0 1px rgba(0,0,0,.4) inset;
+}
+
+.filters-row select:focus,
+#regionDropdown:focus,
+#roleDropdown:focus {
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px var(--accent);
+}
+
+
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+<header>
+  <div>
+    <h1>Bet Builder Helper</h1>
+    <small>Shows valid bet builder combinations by bookmaker and selections.</small>
+  </div>
+  <nav class="navlinks">
+    <a href="index.html">Main Calculator</a>
+    <a href="oddsmatcher.html">Odds Matcher</a>
+    <a href="refund.html">Risk Free</a>
+    <a href="acca.html">Acca</a>
+    <a href="ep.html" class="active">Extra Place</a>
+    <a href="early.html">Early Payout</a>
+    <a href="betbuilder.html">Bet Builder</a>
+  </nav>
+</header>
+
+<section class="card">
+  <p class="helper-intro">
+    Select a bookmaker and how many selections you need for your Bet Builder bet. The table will then give you various options and tell you the lay market for each Bet Builder. Click the lay market to see what it looks like on the exchanges.
+Make sure you lay the right market when laying Correct Scores. For example 1-0 is the home team and 0-1 is the away team.</small>
+  </p>
+
+  <div class="filters-row">
+    <select id="regionDropdown">
+      <option value="All">All Bookmakers</option>
+      <option value="888sport">888sport</option>
+      <option value="Bet365">Bet365</option>
+      <option value="Betano">Betano</option>
+      <option value="Betfair">Betfair</option>
+      <option value="Betfred">Betfred</option>
+      <option value="BetVictor">BetVictor</option>
+      <option value="Betway">Betway</option>
+      <option value="Coral">Coral</option>
+      <option value="Ladbrokes">Ladbrokes</option>
+      <option value="LiveScore Bet">LiveScore Bet</option>
+      <option value="Paddy Power">Paddy Power</option>
+      <option value="Parimatch">Parimatch</option>
+      <option value="Party Poker">Party Poker</option>
+      <option value="RhinoBet">RhinoBet</option>
+      <option value="Sky Bet">Sky Bet</option>
+      <option value="talkSPORT Bet">talkSPORT Bet</option>
+      <option value="Virgin Bet">Virgin Bet</option>
+      <option value="William Hill">William Hill</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <select id="roleDropdown">
+      <option value="All">Any No. of Selections</option>
+      <option value="2">2 Selections</option>
+      <option value="3">3 Selections</option>
+      <option value="4">4 Selections</option>
+    </select>
+  </div>
+
+  <div class="table-wrapper">
+    <table id="table-tbody-wrapper" class="bb-table">
+      <thead>
+        <tr>
+          <th>Back 1</th>
+          <th>Back 2</th>
+          <th>Back 3</th>
+          <th>Back 4</th>
+          <th>Lay Bet</th>
+          <th style="display:none;">Bookmakers</th>
+          <th style="display:none;">Selections</th>
+        </tr>
+      </thead>
+      <tbody id="table-tbody">
+<tr>
+  <td>Team To Win (Can't Use Draw)</td>
+  <td>Over 0.5 Match Goals</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>Winner</b></td>
+  <td style="display:none;">Coral, Ladbrokes, BetVictor, Betano, Parimatch, talkSPORT Bet, RhinoBet, Sky Bet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team To Win (Can't Use Draw)</td>
+  <td>Over 0 Match Goals</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>Winner</b></td>
+  <td style="display:none;"></td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team To Win (Can't Use Draw)</td>
+  <td>Team Selected Over 0.5 Goals</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>Winner</b></td>
+  <td style="display:none;">Betway, LiveScore Bet, Virgin Bet</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team To Win (Can Use Draw)</td>
+  <td>BTTS - Yes</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>Winner & BTTS Yes</b></td>
+  <td style="display:none;">Coral, Ladbrokes, Sky Bet, 888sport, Bet365, Betfair, Betfred, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Betway, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team To Win (Can't Use Draw)</td>
+  <td>BTTS - Yes</td>
+  <td>Over 2.5 Match Goals</td>
+  <td></td>
+  <td class="layCell"><b>Winner & BTTS Yes</b></td>
+  <td style="display:none;">Coral, Ladbrokes, Sky Bet, Betfair, BetVictor, Betano, Parimatch, talkSPORT Bet, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team To Win (Can't Use Draw)</td>
+  <td>BTTS - Yes</td>
+  <td>Over 2 Match Goals</td>
+  <td></td>
+  <td class="layCell"><b>Winner & BTTS Yes</b></td>
+  <td style="display:none;"></td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team To Win (Can Use Draw)</td>
+  <td>BTTS - No</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>Winner & BTTS No</b></td>
+  <td style="display:none;">Sky Bet, 888sport, Bet365, Betfair, Betfred, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Betway, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team To Win (Can't Use Draw)</td>
+  <td>BTTS - No</td>
+  <td>Over 0.5 Match Goals</td>
+  <td></td>
+  <td class="layCell"><b>Winner & BTTS No</b></td>
+  <td style="display:none;">Sky Bet, Betfair, BetVictor, Betano, Parimatch, talkSPORT Bet, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team To Win (Can't Use Draw)</td>
+  <td>BTTS - No</td>
+  <td>Over 0 Match Goals</td>
+  <td></td>
+  <td class="layCell"><b>Winner & BTTS No</b></td>
+  <td style="display:none;"></td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team A Over 0.5 Match Goals</td>
+  <td>Team B Over 0.5 Match Goals</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>BTTS Yes</b></td>
+  <td style="display:none;">Coral, Ladbrokes, 888sport, Betfred, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Betway, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team A Over 0 Match Goals</td>
+  <td>Team B Over 0 Match Goals</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>BTTS Yes</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team To Win (Can Use Draw)</td>
+  <td>Over/Under Match Goals</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>Winner & Over/Under</b></td>
+  <td style="display:none;">Coral, Ladbrokes, Sky Bet, 888sport, Bet365, Betfair, Betfred, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Betway, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Draw</td>
+  <td>Double Chance Draw/Team</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>Draw</b></td>
+  <td style="display:none;">Coral, Ladbrokes, BetVictor, Betano, Parimatch, talkSPORT Bet, Betway, William Hill, Other</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Draw</td>
+  <td>BTTS - No</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>0-0 Correct Score</b></td>
+  <td style="display:none;">Sky Bet, 888sport, Bet365, Betfair, Betfred, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Betway, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team A Under 0.5 First Half Goals</td>
+  <td>Team B Under 0.5 First Half Goals</td>
+  <td>Team A Under 0.5 Second Half Goals</td>
+  <td>Team B Under 0.5 Second Half Goals</td>
+  <td class="layCell"><b>0-0 Correct Score</b></td>
+  <td style="display:none;">Coral, Ladbrokes, 888sport, Betway, Party Poker, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+<tr>
+  <td>Team A Exactly 0 First Half Goals</td>
+  <td>Team B Exactly 0 First Half Goals</td>
+  <td>Team A Exactly 0 Second Half Goals</td>
+  <td>Team B Exactly 0 Second Half Goals</td>
+  <td class="layCell"><b>0-0 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>First Half - Draw</td>
+  <td>Second Half - Draw</td>
+  <td>First Half BTTS - No</td>
+  <td>Second Half BTTS - No</td>
+  <td class="layCell"><b>0-0 Correct Score</b></td>
+  <td style="display:none;">Betfred, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Under 1.5 Match Goals</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>1-0 Correct Score</b></td>
+  <td style="display:none;">Coral, Ladbrokes, Sky Bet, 888sport, Betfair, Betfred, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Betway, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Under 2 Match Goals</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>1-0 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Over 0.5 Match Goals</td>
+  <td>Under 1.5 Match Goals</td>
+  <td>BTTS - No</td>
+  <td class="layCell"><b>1-0 Correct Score</b></td>
+  <td style="display:none;">Sky Bet, Betfair, BetVictor, Betano, Parimatch, talkSPORT Bet, Paddy Power, RhinoBet, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Over 0 Match Goals</td>
+  <td>Under 2 Match Goals</td>
+  <td>BTTS - No</td>
+  <td class="layCell"><b>1-0 Correct Score</b></td>
+  <td style="display:none;"></td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Team To Win At Half-Time</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>Half-time/Full-time</b></td>
+  <td style="display:none;">Coral, Ladbrokes, Sky Bet, 888sport, Bet365, Betfair, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Betway, Betfred, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Draw</td>
+  <td>Under 2.5 Match Goals</td>
+  <td>BTTS - Yes</td>
+  <td></td>
+  <td class="layCell"><b>1-1 Correct Score</b></td>
+  <td style="display:none;">Coral, Ladbrokes, Sky Bet, Betfair, BetVictor, Betano, Parimatch, talkSPORT Bet, Betway, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Under 3 Match Goals</td>
+  <td>BTTS - Yes</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>1-1 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Draw</td>
+  <td>Under 4 Match Goals</td>
+  <td>BTTS - Yes</td>
+  <td></td>
+  <td class="layCell"><b>1-1 Correct Score</b></td>
+  <td style="display:none;"></td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team A Over 0.5 Goals</td>
+  <td>Team B Over 0.5 Goals</td>
+  <td>Team A Under 1.5 Goals</td>
+  <td>Team B Under 1.5 Goals</td>
+  <td class="layCell"><b>1-1 Correct Score</b></td>
+  <td style="display:none;">888sport, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team A Over 0 Goals</td>
+  <td>Team B Over 0 Goals</td>
+  <td>Team A Under 2 Goals</td>
+  <td>Team B Under 2 Goals</td>
+  <td class="layCell"><b>1-1 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Under 3.5 Match Goals</td>
+  <td>BTTS - Yes</td>
+  <td></td>
+  <td class="layCell"><b>2-1 Correct Score</b></td>
+  <td style="display:none;">Coral, Ladbrokes, Sky Bet, 888sport, Betfair, Betfred, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Betway, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Under 4 Match Goals</td>
+  <td>BTTS - Yes</td>
+  <td></td>
+  <td class="layCell"><b>2-1 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team A Over 1.5 Goals</td>
+  <td>Team B Over 0.5 Goals</td>
+  <td>Team A Under 2.5 Goals</td>
+  <td>Team B Under 1.5 Goals</td>
+  <td class="layCell"><b>2-1 Correct Score</b></td>
+  <td style="display:none;">888sport, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+<tr>
+  <td>Team A Over 1 Goals</td>
+  <td>Team B Over 0 Goals</td>
+  <td>Team A Under 3 Goals</td>
+  <td>Team B Under 2 Goals</td>
+  <td class="layCell"><b>2-1 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team A Over 2.5 Goals</td>
+  <td>Team B Over 0.5 Goals</td>
+  <td>Team A Under 3.5 Goals</td>
+  <td>Team B Under 1.5 Goals</td>
+  <td class="layCell"><b>3-1 Correct Score</b></td>
+  <td style="display:none;">888sport, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team A Over 2 Goals</td>
+  <td>Team B Over 0 Goals</td>
+  <td>Team A Under 4 Goals</td>
+  <td>Team B Under 2 Goals</td>
+  <td class="layCell"><b>3-1 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Over 1.5 Match Goals</td>
+  <td>Under 2.5 Match Goals</td>
+  <td>BTTS - No</td>
+  <td class="layCell"><b>2-0 Correct Score</b></td>
+  <td style="display:none;">Sky Bet, Betfair, BetVictor, Betano, Parimatch, talkSPORT Bet, Paddy Power, RhinoBet, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Over 1.5 Match Goals</td>
+  <td>BTTS - No</td>
+  <td>Team A Under 2.5 Goals</td>
+  <td>Team B Under 1.5 Goals</td>
+  <td class="layCell"><b>2-0 Correct Score</b></td>
+  <td style="display:none;">Betfred, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Over 1 Match Goals</td>
+  <td>Under 3 Match Goals</td>
+  <td></td>
+  <td class="layCell"><b>2-0 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Over 2.5 Match Goals</td>
+  <td>Under 3.5 Match Goals</td>
+  <td>BTTS - No</td>
+  <td class="layCell"><b>3-0 Correct Score</b></td>
+  <td style="display:none;">Sky Bet, 888sport, Betfair, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Paddy Power, RhinoBet, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Over 2 Match Goals</td>
+  <td>Under 4 Match Goals</td>
+  <td>BTTS - No</td>
+  <td class="layCell"><b>3-0 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">4</td>
+</tr>
+<tr>
+  <td>Team To Win</td>
+  <td>Over 3.5 Match Goals</td>
+  <td>Under 4.5 Match Goals</td>
+  <td>BTTS - Yes</td>
+  <td class="layCell"><b>3-2 Correct Score</b></td>
+  <td style="display:none;">Coral, Ladbrokes, Sky Bet, 888sport, Betfair, Betfred, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Betway, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Draw</td>
+  <td>Under 5 Match Goals</td>
+  <td>BTTS - Yes</td>
+  <td></td>
+  <td class="layCell"><b>2-2 Correct Score</b></td>
+  <td style="display:none;">Sky Bet, 888sport, Betfair, BetVictor, Betano, Parimatch, talkSPORT Bet, Paddy Power, RhinoBet, William Hill, LiveScore Bet, Virgin Bet, Other</td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team A Over 1.5 Goals</td>
+  <td>Team B Over 1.5 Goals</td>
+  <td>Team A Under 2.5 Goals</td>
+  <td>Team B Under 2.5 Goals</td>
+  <td class="layCell"><b>2-2 Correct Score</b></td>
+  <td style="display:none;">888sport, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team A Over 1 Goals</td>
+  <td>Team B Over 1 Goals</td>
+  <td>Team A Under 3 Goals</td>
+  <td>Team B Under 3 Goals</td>
+  <td class="layCell"><b>2-2 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Over 3.5 Match Goals</td>
+  <td>Under 4.5 Match Goals</td>
+  <td>BTTS - No</td>
+  <td class="layCell"><b>4-0 Correct Score</b></td>
+  <td style="display:none;">Sky Bet, 888sport, Betfair, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, Paddy Power, RhinoBet, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team To Win</td>
+  <td>Over 3 Match Goals</td>
+  <td>Under 5 Match Goals</td>
+  <td>BTTS - No</td>
+  <td class="layCell"><b>4-0 Correct Score</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Draw</td>
+  <td>Under 6 Match Goals</td>
+  <td>BTTS - No</td>
+  <td></td>
+  <td class="layCell"><b>0-0 Correct Score (High Line)</b></td>
+  <td style="display:none;">Sky Bet, Betfair, BetVictor, Betano, Parimatch, talkSPORT Bet, Paddy Power, RhinoBet, William Hill, Other</td>
+  <td style="display:none;">3</td>
+</tr>
+
+<tr>
+  <td>Team A Under 0.5 Match Goals</td>
+  <td>Team B Under 0.5 Match Goals</td>
+  <td></td>
+  <td></td>
+  <td class="layCell"><b>0-0 Correct Score (High Line)</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">2</td>
+</tr>
+
+<tr>
+  <td>Team A Over 0.5 First Half Goals</td>
+  <td>Team B Under 0.5 First Half Goals</td>
+  <td>Team A Over 0.5 Second Half Goals</td>
+  <td>Team B Under 0.5 Second Half Goals</td>
+  <td class="layCell"><b>2-0 Correct Score (HT/FT Split)</b></td>
+  <td style="display:none;">888sport, BetVictor, Betano, Parimatch, Party Poker, talkSPORT Bet, William Hill, Other</td>
+  <td style="display:none;">4</td>
+</tr>
+
+<tr>
+  <td>Team A Over 0 Goals</td>
+  <td>Team B Under 0 Goals</td>
+  <td>Team A Over 1 Goals</td>
+  <td>Team B Under 1 Goals</td>
+  <td class="layCell"><b>2-0 Correct Score (HT/FT Split)</b></td>
+  <td style="display:none;">Bet365</td>
+  <td style="display:none;">4</td>
+</tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+</div>
+
+<script>
+  // --- Filtering logic ---
+  const cols = {
+    regionDropdown: 5,
+    roleDropdown: 6,
+  };
+  const filters = {
+    regionDropdown: 'All',
+    roleDropdown: 'All',
+  };
+
+  function applyFilters(column, value) {
+    const tbody = document.getElementById('table-tbody');
+    const rows = tbody.getElementsByTagName('tr');
+
+    filters[column] = value;
+
+    const keys = Object.keys(filters);
+    for (let i = 0; i < rows.length; i++) {
+      const show = keys.every(k => {
+        const td = rows[i].getElementsByTagName('td')[cols[k]];
+        if (!td) return true;
+        if (filters[k] === 'All') return true;
+        return td.innerHTML.indexOf(filters[k]) > -1;
+      });
+      rows[i].style.display = show ? '' : 'none';
+    }
+  }
+
+  document.getElementById('regionDropdown').addEventListener('change', e => {
+    applyFilters('regionDropdown', e.target.value);
+  });
+  document.getElementById('roleDropdown').addEventListener('change', e => {
+    applyFilters('roleDropdown', e.target.value);
+  });
+</script>
+
+</body>
+</html>

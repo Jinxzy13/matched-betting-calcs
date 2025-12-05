@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Risk Free / Refund Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg1:#04394a; --bg2:#021e28; --panel:#002d3c; --line:#0e586d;
+      --ink:#e6faff; --accent:#7ce3f0; --btn1:#16b7c5; --btn2:#109aa6;
+      --win:#2ed47a; --loss:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0; padding:0;
+      font-family:"Ubuntu",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink); background:radial-gradient(circle at top,var(--bg1),var(--bg2));
+    }
+    body{min-height:100vh; display:flex; justify-content:center; padding:1rem}
+    .shell{
+      width:100%; max-width:1200px;
+      padding:1rem; border-radius:18px;
+      background:rgba(0,0,0,.2); box-shadow:0 18px 40px rgba(0,0,0,.6);
+    }
+    header{
+      display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center;
+      gap:.75rem; margin-bottom:1rem;
+    }
+    header h1{margin:0; font-size:1.4rem; letter-spacing:.03em}
+    header small{opacity:.8; font-size:.9rem}
+    .navlinks{display:flex; gap:.5rem; flex-wrap:wrap}
+    .navlinks a{
+      text-decoration:none; color:var(--accent);
+      font-size:.88rem; padding:.25rem .6rem;
+      border-radius:999px; border:1px solid rgba(124,227,240,.45);
+    }
+    .grid{
+      display:grid; gap:1rem;
+    }
+    @media (min-width:950px){
+      .grid{grid-template-columns:1.15fr .95fr;}
+    }
+    .card{
+      background:rgba(0,0,0,.25);
+      border-radius:16px;
+      border:1px solid rgba(10,100,125,.9);
+      padding:1rem;
+    }
+    h2{margin:.1rem 0 0; font-size:1.1rem}
+    h3{margin:.35rem 0 .5rem; font-size:1rem}
+    label{
+      display:flex; flex-direction:column;
+      font-size:.86rem; gap:.2rem; margin-bottom:.5rem;
+    }
+    input[type="number"],input[type="text"]{
+      border-radius:8px; border:1px solid var(--line);
+      padding:.45rem .55rem; background:rgba(3,35,45,.85);
+      color:var(--ink); font-size:.95rem;
+    }
+    input::placeholder{opacity:.5}
+    .row-2{
+      display:grid; gap:.75rem;
+    }
+    @media (min-width:720px){
+      .row-2{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+    .panel{
+      background:rgba(0,0,0,.2);
+      border-radius:12px; border:1px solid rgba(16,120,150,.75);
+      padding:.75rem;
+    }
+    .panel.blue{background:linear-gradient(135deg,rgba(0,72,96,.9),rgba(0,52,72,.9));}
+    .panel.red{background:linear-gradient(135deg,rgba(96,30,30,.9),rgba(72,18,18,.9));}
+    .panel h4{margin:.1rem 0 .6rem; font-size:.95rem}
+    .inline{
+      display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;
+      font-size:.9rem;
+    }
+    .inline strong{font-weight:600}
+    .muted{opacity:.85; font-size:.86rem}
+    .rating-line{margin-top:.4rem; font-size:.9rem}
+    .rating-line strong{color:var(--accent)}
+    .profit-main{margin:.75rem 0; font-size:1.1rem; text-align:center}
+    .profit-main .win{color:var(--win); font-weight:700}
+    .profit-main .loss{color:var(--loss); font-weight:700}
+    .two-cols{
+      display:grid; gap:.75rem;
+    }
+    @media (min-width:640px){
+      .two-cols{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+    table{
+      width:100%; border-collapse:collapse; font-size:.86rem;
+    }
+    th,td{padding:.2rem .15rem; text-align:right}
+    th:first-child,td:first-child{text-align:left}
+    th{font-weight:500; opacity:.85; border-bottom:1px solid rgba(255,255,255,.08);}
+    .win{color:var(--win)}
+    .loss{color:var(--loss)}
+    .btn{
+      border:none; cursor:pointer;
+      border-radius:10px;
+      padding:.5rem .8rem;
+      font-size:.9rem; font-weight:500;
+      background:linear-gradient(135deg,var(--btn1),var(--btn2));
+      color:#022229;
+      display:inline-flex; align-items:center; gap:.35rem;
+    }
+    .btn:disabled{opacity:.55; cursor:not-allowed}
+    .btn.secondary{
+      background:transparent; color:var(--ink);
+      border:1px solid rgba(124,227,240,.5);
+    }
+    .btn-row{
+      display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem;
+      margin-top:.5rem;
+    }
+    .tiny{font-size:.8rem; opacity:.8}
+    .history-head{
+      display:flex; justify-content:space-between; align-items:center; gap:.5rem;
+      margin-bottom:.5rem;
+    }
+    .historylist{display:grid; gap:.5rem; max-height:420px; overflow-y:auto; padding-right:.2rem}
+    .item{
+      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.35rem .75rem;
+      padding:.55rem .65rem;
+      border-radius:10px; border:1px solid var(--line);
+      background:rgba(4,57,74,.65);
+    }
+    .item h5{margin:0 0 .1rem; font-size:.96rem}
+    .item .muted-line{font-size:.8rem; opacity:.9}
+    .item .pl{
+      font-weight:700; font-size:1rem;
+    }
+    .pill{
+      border-radius:999px; border:1px solid rgba(255,255,255,.2);
+      padding:.05rem .4rem; font-size:.72rem; opacity:.9;
+    }
+    .ghost{
+      border-radius:8px; border:1px solid rgba(255,255,255,.28);
+      background:transparent; color:var(--ink);
+      padding:.25rem .55rem; font-size:.78rem; cursor:pointer;
+    }
+    .ghost.danger{border-color:#a14545; color:#ffbdbd}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>Risk Free / Refund Calculator</h1>
+        <small>Qualifying bet + refund/free bet, locked-in profit either way.</small>
+      </div>
+      <nav class="navlinks">
+    <a href="index.html">Main Calculator</a>
+    <a href="oddsmatcher.html">Odds Matcher</a>
+    <a href="refund.html">Risk Free</a>
+    <a href="acca.html">Acca</a>
+    <a href="ep.html" class="active">Extra Place</a>
+    <a href="early.html">Early Payout</a>
+    <a href="betbuilder.html">Bet Builder</a>
+      </nav>
+    </header>
+
+    <div class="grid">
+      
+      <section class="card">
+        <div class="inline" style="margin-bottom:.5rem">
+          <div><strong>Bet type:</strong> Risk Free / Refund</div>
+        </div>
+
+        <div class="row-2">
+          <div class="panel blue">
+            <h4>Qualifying Back Bet</h4>
+            <label>Back stake (£)
+              <input id="B" type="number" step="1" value="10">
+            </label>
+            <label>Back odds
+              <input id="Ob" type="number" step="0.01" value="6">
+            </label>
+            <label>Refund / Free bet award (£)
+              <input id="RfAward" type="number" step="1" value="10">
+            </label>
+            <label>Estimated free bet retention (%)
+              <input id="RfRet" type="number" step="1" value="70">
+            </label>
+            <p class="tiny">
+              Retention is the average % you can turn into profit from the free bet (e.g. 70% of £10 ≈ £7 profit).
+            </p>
+          </div>
+
+          <div class="panel red">
+            <h4>Lay Bet (Exchange)</h4>
+            <label>Lay odds
+              <input id="Ol" type="number" step="0.01" value="6">
+            </label>
+            <label>Exchange commission (%)
+              <input id="cPct" type="number" step="0.1" value="0">
+            </label>
+            <div class="muted tiny">
+              Commission is the exchange fee on lay <em>winnings</em>, usually 0–5%.
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:.75rem">
+          <div class="inline">
+            <span>You could lay</span>
+            <strong>£<span id="layStake">0.00</span></strong>
+            <span>at odds of</span>
+            <strong><span id="layOddsText">0.0</span></strong>
+            <span>and your liability will be</span>
+            <strong>£<span id="liability">0.00</span></strong>.
+          </div>
+
+          <div class="profit-main">
+            Your profit will be
+            <span id="profitOverall" class="win">£0.00</span>
+            <span class="tiny">(locked in either way)</span>
+          </div>
+
+          <div class="rating-line">
+            This bet has a rating of <strong><span id="rating">0.00%</span></strong>
+            <span class="tiny">(worst-case profit ÷ qualifying stake).</span>
+          </div>
+        </div>
+
+        <div id="fbInfo" class="tiny muted"></div>
+
+        <div class="two-cols" style="margin-top:.9rem">
+          <div class="panel">
+            <h4>If qualifying bet <strong>wins</strong></h4>
+            <table>
+              <thead>
+                <tr><th></th><th>£</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Bookmaker</td><td id="bmBackWin">0.00</td></tr>
+                <tr><td>Exchange</td><td id="exBackWin">0.00</td></tr>
+                <tr><td>Free bet</td><td id="fbBackWin">0.00</td></tr>
+                <tr><th>Total</th><th id="totalBackWin">0.00</th></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <h4>If qualifying bet <strong>loses</strong></h4>
+            <table>
+              <thead>
+                <tr><th></th><th>£</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Bookmaker</td><td id="bmLayWin">0.00</td></tr>
+                <tr><td>Exchange</td><td id="exLayWin">0.00</td></tr>
+                <tr><td>Free bet</td><td id="fbLayWin">0.00</td></tr>
+                <tr><th>Total</th><th id="totalLayWin">0.00</th></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button id="recalc" class="btn" type="button">Recalculate</button>
+        </div>
+
+        <hr style="border:none; border-top:1px solid rgba(255,255,255,.18); margin:1rem 0 .75rem">
+
+        <h3>Log this bet</h3>
+        <p class="tiny muted">
+          Saved bets will appear in the Risk Free history on the right and in your main calculator history.
+        </p>
+        <div class="row-2">
+          <label>Event
+            <input id="logEvent" type="text" placeholder="Team A v Team B">
+          </label>
+          <label>Outcome backed
+            <input id="logOutcome" type="text" placeholder="Over 2.5 Goals">
+          </label>
+          <label>Bookmaker
+            <input id="logBookie" type="text" placeholder="Bet365">
+          </label>
+          <label>Exchange
+            <input id="logExchange" type="text" placeholder="Betfair">
+          </label>
+        </div>
+        <div class="btn-row">
+          <button id="saveBet" class="btn" type="button">Save bet</button>
+          <span class="tiny muted">Bet type stored as <strong>risk_free</strong>.</span>
+        </div>
+      </section>
+
+      
+      <section class="card">
+        <div class="history-head">
+          <div>
+            <h2>Risk Free History</h2>
+            <div class="tiny muted">Only bets with bet_type = risk_free are shown.</div>
+          </div>
+          <button id="refreshHistory" class="btn secondary" type="button">Refresh</button>
+        </div>
+        <div id="historyList" class="historylist">
+          <div class="tiny muted">Loading…</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+
+    function money(x){
+      const n = Number(x) || 0;
+      return (Math.round(n*100)/100).toFixed(2);
+    }
+
+    function escapeHtml(str){
+      return String(str ?? '').replace(/[&<>"']/g, m => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[m]);
+    }
+
+    /* ---- API wrappers (reuse existing PHP endpoints) ---- */
+async function settleOnServer(payload){
+  const res = await fetch('settle_bet.php', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+
+    async function saveToServer(entry){
+      const res = await fetch('save_bet.php', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(entry)
+      });
+      return res.json();
+    }
+
+    async function loadHistory(){
+      const res = await fetch('get_history.php');
+      return res.json();
+    }
+
+    async function deleteFromServer(id){
+      await fetch('delete_bet.php?id='+encodeURIComponent(id));
+    }
+
+    /* ---- Core risk-free calculation ---- */
+function compute(){
+  const B  = parseFloat($('#B').value) || 0;
+  const Ob = parseFloat($('#Ob').value) || 0;
+  const F  = parseFloat($('#RfAward').value) || 0;
+  const rPct = parseFloat($('#RfRet').value) || 0;
+  const r  = rPct / 100;
+  const Ol = parseFloat($('#Ol').value) || 0;
+  const cPct = parseFloat($('#cPct').value) || 0;
+  const c  = cPct / 100;
+
+  const fbInfoEl = $('#fbInfo');
+
+  if (!B || !Ob || !Ol){
+    $('#layStake').textContent = '0.00';
+    $('#liability').textContent = '0.00';
+    $('#profitOverall').textContent = '£0.00';
+    $('#rating').textContent = '0.00%';
+    if (fbInfoEl) fbInfoEl.textContent = '';
+    return null;
+  }
+
+  if (Ol <= c){
+    // avoid divide-by-zero / nonsense
+    if (fbInfoEl) fbInfoEl.textContent = '';
+    return null;
+  }
+
+  // Lay stake – same as OddsMonkey Risk Free:
+  // L = (B*Ob - F*r) / (Ol - c)
+  const L = (B*Ob - F*r) / (Ol - c);
+  const liability = (Ol - 1) * L;
+
+  // --- Qualifying back wins (no refund / no free bet) ---
+  const bookie_win_back = B * (Ob - 1);
+  const ex_win_back     = -liability;
+  const fb_win_back     = 0;
+  const total_back      = bookie_win_back + ex_win_back + fb_win_back;
+
+  // --- Qualifying bet loses (lay wins) ---
+  const bookie_win_lay      = -B;          // lost qualifying stake
+  const ex_win_lay          = L * (1 - c); // exchange profit
+
+  // Implied free-bet profit (F * retention)
+  const fb_implied          = F * r;
+
+  // Immediate result (before using free bet)
+  const total_lay_immediate = bookie_win_lay + ex_win_lay;
+
+  // Locked-in result including expected free-bet profit
+  const fb_win_lay          = fb_implied;
+  const total_lay_with_fb   = total_lay_immediate + fb_win_lay;
+
+  // Worst-case locked-in profit (these two should match when tuned right)
+  const worst_locked = Math.min(total_back, total_lay_with_fb);
+  const rating       = B ? (worst_locked / B) * 100 : 0;
+
+  // ---- Update UI ----
+  $('#layStake').textContent    = money(L);
+  $('#layOddsText').textContent = Ol || 0;
+  $('#liability').textContent   = money(liability);
+
+  const profitEl = $('#profitOverall');
+  profitEl.textContent = '£' + money(worst_locked);
+  profitEl.classList.toggle('win', worst_locked >= 0);
+  profitEl.classList.toggle('loss', worst_locked < 0);
+
+  $('#rating').textContent = money(rating) + '%';
+
+  // Extra info: show how much free-bet profit is assumed
+  if (fbInfoEl){
+    if (F > 0 && rPct > 0){
+      fbInfoEl.textContent =
+        'Includes expected free-bet profit of £' +
+        money(fb_implied) +
+        ' at ' + rPct.toFixed(0) + '% retention.';
+    } else {
+      fbInfoEl.textContent = '';
+    }
+  }
+
+  // Breakdown tables
+  // Back wins
+  $('#bmBackWin').textContent    = money(bookie_win_back);
+  $('#exBackWin').textContent    = money(ex_win_back);
+  $('#fbBackWin').textContent    = money(fb_win_back);
+  $('#totalBackWin').textContent = money(total_back);
+
+  // Qualifier loses – show locked-in side (including free bet)
+  $('#bmLayWin').textContent     = money(bookie_win_lay);
+  $('#exLayWin').textContent     = money(ex_win_lay);
+  $('#fbLayWin').textContent     = money(fb_win_lay);
+  $('#totalLayWin').textContent  = money(total_lay_with_fb);
+
+  // For saving/settling:
+  // backWins  = back-side result (no refund)
+  // layWins   = immediate qualifier result (NO free bet yet)
+  // layWinsWithFB / fbImplied are there if you ever want them.
+  return {
+    B, Ob, F, rPct, Ol, cPct,
+    L, liability,
+    backWins: total_back,
+    layWins: total_lay_immediate,
+    layWinsWithFB: total_lay_with_fb,
+    fbImplied: fb_implied,
+    rating
+  };
+}
+
+
+/* ---- History rendering (risk_free only) ---- */
+async function renderHistory(){
+  const listEl = $('#historyList');
+  listEl.innerHTML = '<div class="tiny muted">Loading…</div>';
+
+  let hist = [];
+  try{
+    hist = await loadHistory();
+  }catch(e){
+    console.error(e);
+    listEl.innerHTML = '<div class="tiny muted">Error loading history.</div>';
+    return;
+  }
+
+  const rf = (hist || []).filter(e => (e.bet_type || e.betType) === 'risk_free');
+  if (!rf.length){
+    listEl.innerHTML = '<div class="tiny muted">No risk free bets saved yet.</div>';
+    return;
+  }
+
+  rf.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+  listEl.innerHTML = rf.map(e => {
+    const bw = Number(e.back_wins || 0);
+    const lw = Number(e.lay_wins || 0);
+    const worst = Math.min(bw,lw);
+    const plClass = worst >= 0 ? 'win' : 'loss';
+
+    const bookieName = e.bookmaker || e.bookie || '';
+
+    const dt = e.created_at ? new Date(e.created_at) : null;
+    const dtStr = dt && !isNaN(dt)
+      ? dt.toLocaleString()
+      : '';
+
+    return `
+      <div class="item">
+        <div>
+          <h5>${escapeHtml(e.event || '—')}</h5>
+          <div class="muted-line">${escapeHtml(e.outcome || '')}</div>
+          <div class="muted-line tiny">
+            <span class="pill">${escapeHtml(bookieName)}</span>
+            <span class="pill">${escapeHtml(e.exchange || '')}</span>
+          </div>
+          <div class="muted-line tiny">
+            Stake £${money(e.stake)} • Back ${e.back_odds} / Lay ${e.lay_odds}
+          </div>
+          ${dtStr ? `<div class="muted-line tiny">${dtStr}</div>` : ''}
+        </div>
+        <div style="margin-top:.35rem; display:flex; flex-direction:column; gap:.3rem; align-items:flex-end">
+          <button class="ghost" data-act="settle" data-id="${e.id || ''}"
+                  data-back="${bw}" data-lay="${lw}">
+            Settle
+          </button>
+          <button class="ghost danger" data-act="delete" data-id="${e.id || ''}">
+            Delete
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Attach click handler once per render using delegation
+  $('#historyList').onclick = async ev => {
+    const btn = ev.target.closest('button[data-act]');
+    if (!btn) return;
+
+    const act = btn.dataset.act;
+    const id  = btn.dataset.id;
+    if (!id) return;
+
+    if (act === 'delete') {
+      if (!confirm('Delete this bet from history?')) return;
+      await deleteFromServer(id);
+      await renderHistory();
+      return;
+    }
+
+    if (act === 'settle') {
+      const backPL = Number(btn.dataset.back || 0);
+      const layPL  = Number(btn.dataset.lay  || 0);
+
+      const res = (prompt('Did the qualifying back bet win or lose? Type WIN or LOSE') || '')
+        .trim().toLowerCase();
+      if (res !== 'win' && res !== 'lose') return;
+
+      let finalPL = 0;
+      let resultCode = '';
+
+      if (res === 'win') {
+        finalPL = backPL;
+        resultCode = 'back_win';
+      } else {
+        const fbStr = prompt('Enter the actual P/L from the FREE BET once it settled (e.g. 7 or -5):','0');
+        if (fbStr === null) return;
+        const fbPL = Number(fbStr) || 0;
+
+        finalPL = layPL + fbPL; // qualifier result + free bet result
+        resultCode = 'lay_win';
+      }
+
+      await settleOnServer({
+        id,
+        settled: 1,
+        settled_result: resultCode,
+        settled_pl: finalPL
+      });
+
+      await renderHistory();
+    }
+  };
+}
+
+
+    /* ---- Wire up events ---- */
+    document.addEventListener('DOMContentLoaded', () => {
+      ['B','Ob','RfAward','RfRet','Ol','cPct'].forEach(id => {
+        const el = $('#'+id);
+        if (el) el.addEventListener('input', compute);
+      });
+      $('#recalc').addEventListener('click', e => {
+        e.preventDefault();
+        compute();
+      });
+
+      $('#saveBet').addEventListener('click', async () => {
+        const calc = compute();
+        if (!calc) return;
+
+        const entry = {
+          event: $('#logEvent').value.trim() || '—',
+          outcome: $('#logOutcome').value.trim() || 'Risk free refund',
+          bookie: $('#logBookie').value.trim() || '—',
+          exchange: $('#logExchange').value.trim() || '—',
+
+          betType: 'risk_free',
+          noLay: 0,
+          stake: Number(calc.B),
+          backOdds: Number(calc.Ob),
+          layOdds: Number(calc.Ol),
+          commissionPct: Number(calc.cPct),
+          layStake: Number(calc.L),
+          backWins: Number(calc.backWins),
+          layWins: Number(calc.layWins),
+          expectedPL: Number(Math.min(calc.backWins, calc.layWins))
+        };
+
+        try{
+          await saveToServer(entry);
+          $('#logEvent').value = '';
+          $('#logOutcome').value = '';
+          $('#logBookie').value = '';
+          $('#logExchange').value = '';
+          await renderHistory();
+        }catch(e){
+          console.error(e);
+          alert('Error saving bet.');
+        }
+      });
+
+      $('#refreshHistory').addEventListener('click', () => renderHistory());
+
+      // First run
+      compute();
+      renderHistory();
+    });
+  </script>
+</body>
+</html>

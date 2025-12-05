@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Odds Matcher</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg1:#021e28; --bg2:#001319;
+      --panel:#002d3c; --line:#0e586d;
+      --ink:#e6faff; --accent:#7ce3f0;
+      --win:#2ed47a; --loss:#ff6b6b;
+      --muted:rgba(230,250,255,0.6);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Ubuntu',sans-serif;
+      background: radial-gradient(circle at 50% 20%, var(--bg2), var(--bg1) 80%);
+      color:var(--ink);
+    }
+    .wrap{
+      max-width:1200px;
+      margin:1.5rem auto 2rem;
+      padding:1.25rem 1.5rem 1.5rem;
+      background:rgba(0,45,60,0.93);
+      border-radius:16px;
+      border:1px solid var(--line);
+      box-shadow:0 0 40px rgba(0,0,0,0.55);
+    }
+    h1{
+      margin:0 0 .25rem;
+      font-weight:700;
+      color:var(--accent);
+      font-size:1.6rem;
+    }
+    .subhead{
+      font-size:.9rem;
+      color:var(--muted);
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:.5rem;
+      align-items:center;
+    }
+    .filters-bar{
+      margin:0.75rem 0;
+      padding:0.75rem;
+      border-radius:10px;
+      background:rgba(1,25,35,0.96);
+      border:1px solid rgba(14,88,109,0.7);
+    }
+    .filters-bar label{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .filters-bar select,
+    .filters-bar input[type="number"]{
+      padding:.25rem .4rem;
+      border-radius:4px;
+      border:1px solid var(--line);
+      background:#022630;
+      color:var(--ink);
+      font-size:.85rem;
+    }
+    .filters-bar input[type="range"]{
+      width:160px;
+    }
+    .filters-bar button{
+      padding:.3rem .8rem;
+      border-radius:4px;
+      border:1px solid var(--line);
+      background:#024457;
+      color:var(--ink);
+      font-size:.85rem;
+      cursor:pointer;
+    }
+    .filters-bar button:hover{
+      background:#036072;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:1rem;
+      font-size:.9rem;
+    }
+    thead{
+      background:rgba(4,57,74,0.95);
+      position:sticky;
+      top:0;
+      z-index:5;
+    }
+    th, td{
+      padding:.45rem .5rem;
+      border-bottom:1px solid rgba(14,88,109,0.4);
+      text-align:left;
+      white-space:nowrap;
+    }
+    th{
+      font-weight:600;
+      color:var(--accent);
+      font-size:.82rem;
+    }
+    tbody tr:nth-child(even){
+      background:rgba(1,25,35,0.82);
+    }
+    tbody tr:hover{
+      background:rgba(10,80,100,0.9);
+    }
+    .event{
+      font-weight:500;
+      color:var(--ink);
+      white-space:normal;
+    }
+    .time{
+      color:var(--muted);
+      font-size:.8rem;
+    }
+    .sel-pill{
+      display:inline-block;
+      padding:.1rem .45rem;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:.78rem;
+      color:var(--accent);
+    }
+    .plcell{
+      font-weight:700;
+      text-align:left;
+    }
+    .pl-good{color:var(--win);}
+    .pl-bad{color:var(--loss);}
+    .tiny{
+      font-size:.78rem;
+      color:var(--muted);
+    }
+    .loading{
+      margin-top:1rem;
+      font-size:.9rem;
+      color:var(--muted);
+    }
+    @media (max-width:800px){
+      table{font-size:.78rem;}
+      th,td{padding:.35rem .35rem;}
+      h1{font-size:1.3rem;}
+    }
+    .calc-cell{
+      text-align:center;
+    }
+    .calc-cell a{
+      text-decoration:none;
+      font-size:1.1rem;
+      display:inline-block;
+    }
+
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Odds Matcher</h1>
+  <div class="subhead">
+    <span>Back: Selected bookies • Lay: Matchbook (0% comm)</span>
+    <span class="tiny">
+      Sorted by <span id="mode-label">qualifying rating</span>
+      &nbsp;|&nbsp;
+      Stake: £<span id="stake-label">10</span>
+    </span>
+  </div>
+
+  <div class="filters-bar">
+    <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;">
+
+      
+      <div>
+        <label for="filter-timeframe"><strong>Filter timeframe</strong></label><br>
+        <input id="filter-timeframe" type="range" min="0" max="7" step="1" value="7">
+        <div style="font-size:0.85rem;margin-top:0.1rem;">
+          <span id="filter-timeframe-label">All</span>
+        </div>
+      </div>
+
+      
+      <label style="display:flex;align-items:center;gap:0.25rem;margin-left:0.5rem;">
+        <input type="checkbox" id="filter-today">
+        Today only?
+      </label>
+
+      
+      <div>
+        <label for="filter-bookmaker"><strong>Bookmaker</strong></label><br>
+        <select id="filter-bookmaker">
+          <option value="">All Bookmakers</option>
+        </select>
+      </div>
+
+      
+      <div>
+        <label for="filter-min-rating"><strong>Rating range</strong></label><br>
+        <input id="filter-min-rating" type="number" step="0.1" value="96" style="width:4.5rem;">
+        –
+        <input id="filter-max-rating" type="number" step="0.1" value="200" style="width:4.5rem;">
+      </div>
+
+      
+      <div>
+        <label style="display:flex;align-items:center;gap:0.35rem;">
+          <input type="checkbox" id="toggle-snr">
+          SnR mode
+        </label>
+      </div>
+
+      
+      <div>
+        <label for="stake-input"><strong>Stake (£)</strong></label><br>
+        <input id="stake-input" type="number" step="1" min="1" value="10" style="width:5rem;">
+      </div>
+
+      
+      <div style="margin-left:auto;display:flex;gap:0.5rem;">
+        <button id="filter-clear" type="button">Clear Filters</button>
+        <button id="filter-refresh" type="button">Refresh</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status" class="loading">Loading odds...</div>
+
+  <div style="overflow-x:auto; max-height:70vh; margin-top:.3rem;">
+    <table id="oddsTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>KO</th>
+          <th>Sel</th>
+          <th>Back (bookie)</th>
+          <th>Lay (Matchbook)</th>
+          <th>Rating</th>
+          <th style="width:2.5rem;text-align:center;">🖩</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const BASE_STAKE = 10;          // must match $STAKE in oddsmatcher.php
+let allRows = [];
+let snrMode = false;            // false = normal, true = SnR
+
+// map slider position -> label + hours ahead
+const timeframeMap = {
+  0: {label: '30 mins', hours: 0.5},
+  1: {label: '1 hour',  hours: 1},
+  2: {label: '2 hours', hours: 2},
+  3: {label: '6 hours', hours: 6},
+  4: {label: '12 hours',hours: 12},
+  5: {label: '1 day',   hours: 24},
+  6: {label: '3 days',  hours: 72},
+  7: {label: 'All',     hours: null},
+};
+
+/**
+ * Calculate rating for a row depending on mode.
+ * - Normal: use row.rating from PHP (100% = breakeven).
+ * - SnR: use bw/lw and show % return on the free bet.
+ */
+function calcRating(row){
+  // Normal “qualifying” rating comes from PHP
+  const qualRating = Number(row.rating) || 0;
+
+  if (!snrMode) {
+    return qualRating;
+  }
+
+  // --- SNR mode: recompute using free-bet maths ---
+  const B = Number(row.back_odds);   // back odds
+  const L = Number(row.lay_odds);    // lay odds
+  const S = BASE_STAKE;              // reference free-bet stake (10)
+  const COMM = 0;                    // match $COMMISSION in PHP
+
+  if (!isFinite(B) || !isFinite(L) || B <= 1 || L <= COMM) {
+    return qualRating; // fall back if anything is weird
+  }
+
+  // Optimal lay stake for SNR:
+  //   L_stake = S*(B-1)/(L - COMM)
+  const layStake = S * (B - 1) / (L - COMM);
+
+  // Profits in each outcome
+  const profitWin  = S * (B - 1) - (L - 1) * layStake;      // back wins
+  const profitLose = layStake * (1 - COMM);                 // back loses
+
+  const worst = Math.min(profitWin, profitLose);
+
+  // SNR rating = % return on the free bet stake
+  return 100 * (worst / S);
+}
+
+
+
+function renderTable(rows){
+  const status = document.getElementById('status');
+  const table  = document.getElementById('oddsTable');
+  if (!table) return;
+
+  const tbody  = table.querySelector('tbody');
+  tbody.innerHTML = '';
+
+  // Current stake from input (default back to BASE_STAKE)
+  const stakeInput = document.getElementById('stake-input');
+  const stakeVal   = stakeInput ? (parseFloat(stakeInput.value) || BASE_STAKE) : BASE_STAKE;
+
+  if (!rows || !rows.length){
+    status.textContent = 'No suitable matches found (after filters).';
+    table.style.display = 'none';
+    return;
+  }
+
+  const rowsHtml = rows.map(row => {
+    const dt = new Date(row.time);
+    const tStr = isNaN(dt.getTime())
+      ? ''
+      : dt.toLocaleString(undefined, {
+          month:'short',
+          day:'numeric',
+          hour:'2-digit',
+          minute:'2-digit'
+        });
+
+    const rating = calcRating(row);   // uses SnR or normal
+
+    const plClass =
+      rating >= 100 ? 'pl-good' :
+      rating >= 97  ? 'pl-good' :
+                      'pl-bad';
+
+    // Build link URL for the calculator page
+    const params = new URLSearchParams({
+      mode: snrMode ? 'snr' : 'normal',             // bet type
+      stake: stakeVal.toString(),
+      back_odds: Number(row.back_odds).toFixed(2),
+      lay_odds:  Number(row.lay_odds).toFixed(2),
+      selection: row.selection,
+      event:     row.event
+    });
+
+    const calcHref = 'index.html?' + params.toString();
+
+    return `
+      <tr>
+        <td>
+          <div class="event">${row.event}</div>
+        </td>
+        <td><div class="time">${tStr}</div></td>
+        <td><span class="sel-pill">${row.selection}</span></td>
+        <td>${Number(row.back_odds).toFixed(2)} <span class="tiny">(${row.back_bk || ''})</span></td>
+        <td>${Number(row.lay_odds).toFixed(2)}</td>
+        <td class="plcell ${plClass}">${rating.toFixed(2)}%</td>
+        <td class="calc-cell">
+          <a href="${calcHref}" title="Open calculator">🖩</a>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.innerHTML = rowsHtml;
+  status.textContent = '';
+  table.style.display = '';
+}
+
+
+function initBookmakerFilter(rows){
+  const sel = document.getElementById('filter-bookmaker');
+  if (!sel) return;
+
+  sel.innerHTML = '<option value="">All Bookmakers</option>';
+  const set = new Set();
+  (rows || []).forEach(r => {
+    if (r.back_bk) set.add(r.back_bk);
+  });
+
+  Array.from(set).sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+}
+
+function applyFilters(){
+  if (!Array.isArray(allRows) || !allRows.length){
+    renderTable([]);
+    return;
+  }
+
+  const tfRange = document.getElementById('filter-timeframe');
+  const todayCb = document.getElementById('filter-today');
+  const bkSel   = document.getElementById('filter-bookmaker');
+  const minRat  = document.getElementById('filter-min-rating');
+  const maxRat  = document.getElementById('filter-max-rating');
+
+  const now   = new Date();
+  const tfCfg = tfRange ? (timeframeMap[tfRange.value] || timeframeMap[7]) : timeframeMap[7];
+  const minRating = minRat ? (parseFloat(minRat.value) || 0) : 0;
+  const maxRating = maxRat ? (parseFloat(maxRat.value) || Infinity) : Infinity;
+  const chosenBk  = bkSel ? bkSel.value : '';
+
+  const filtered = allRows.filter(row => {
+    const ko = new Date(row.time);
+
+    // ignore already-started (belt & braces)
+    if (ko < now) return false;
+
+    // timeframe
+    if (tfCfg && tfCfg.hours !== null){
+      const diffHours = (ko - now) / 36e5;
+      if (diffHours < 0 || diffHours > tfCfg.hours) return false;
+    }
+
+    // today only
+    if (todayCb && todayCb.checked){
+      if (ko.toDateString() !== now.toDateString()) return false;
+    }
+
+    // bookmaker
+    if (chosenBk && row.back_bk !== chosenBk) return false;
+
+    // rating band in current mode
+    const ratingVal = calcRating(row);
+    if (ratingVal < minRating || ratingVal > maxRating) return false;
+
+    return true;
+  });
+
+  renderTable(filtered);
+}
+
+function updateTimeframeLabel(){
+  const tfRange = document.getElementById('filter-timeframe');
+  const tfLabel = document.getElementById('filter-timeframe-label');
+  if (!tfRange || !tfLabel) return;
+
+  const cfg = timeframeMap[tfRange.value] || timeframeMap[7];
+  tfLabel.textContent = cfg.label;
+}
+
+function updateModeLabel(){
+  const modeSpan = document.getElementById('mode-label');
+  if (!modeSpan) return;
+  modeSpan.textContent = snrMode ? 'SnR rating (free bet %)' : 'qualifying rating';
+}
+
+function initFiltersUI(){
+  const tfRange   = document.getElementById('filter-timeframe');
+  const todayCb   = document.getElementById('filter-today');
+  const bkSel     = document.getElementById('filter-bookmaker');
+  const minRat    = document.getElementById('filter-min-rating');
+  const maxRat    = document.getElementById('filter-max-rating');
+  const clearBtn  = document.getElementById('filter-clear');
+  const refBtn    = document.getElementById('filter-refresh');
+  const snrToggle = document.getElementById('toggle-snr');
+  const stakeInput= document.getElementById('stake-input');
+  const stakeLabel= document.getElementById('stake-label');
+
+  // timeframe slider
+  if (tfRange){
+    tfRange.addEventListener('input', () => {
+      updateTimeframeLabel();
+      applyFilters();
+    });
+    updateTimeframeLabel();
+  }
+
+  // simple filters
+  if (todayCb) todayCb.addEventListener('change', applyFilters);
+  if (bkSel)   bkSel.addEventListener('change', applyFilters);
+  if (minRat)  minRat.addEventListener('input', applyFilters);
+  if (maxRat)  maxRat.addEventListener('input', applyFilters);
+
+  // SnR toggle
+  if (snrToggle){
+    snrToggle.addEventListener('change', () => {
+      snrMode = snrToggle.checked;
+      updateModeLabel();
+      applyFilters();
+    });
+  }
+
+  // stake input (just updates label for now)
+  if (stakeInput && stakeLabel){
+    stakeInput.addEventListener('input', () => {
+      const v = parseFloat(stakeInput.value) || BASE_STAKE;
+      stakeLabel.textContent = v.toFixed(0);
+    });
+  }
+
+  // clear & refresh buttons
+  if (clearBtn){
+    clearBtn.addEventListener('click', () => {
+      if (tfRange){ tfRange.value = 7; updateTimeframeLabel(); }
+      if (todayCb) todayCb.checked = false;
+      if (bkSel)   bkSel.value = '';
+      if (minRat)  minRat.value = 96;
+      if (maxRat)  maxRat.value = 200;
+      if (snrToggle){ snrToggle.checked = false; snrMode = false; }
+      if (stakeInput && stakeLabel){
+        stakeInput.value = BASE_STAKE;
+        stakeLabel.textContent = BASE_STAKE.toFixed(0);
+      }
+      updateModeLabel();
+      applyFilters();
+    });
+  }
+
+  if (refBtn){
+    refBtn.addEventListener('click', () => {
+      loadOdds(true); // force fresh fetch
+    });
+  }
+
+  updateModeLabel();
+}
+
+async function loadOdds(forceRefresh = false){
+  const status = document.getElementById('status');
+  const table  = document.getElementById('oddsTable');
+  const tbody  = table ? table.querySelector('tbody') : null;
+
+  if (!table || !tbody) return;
+
+  try{
+    status.textContent = 'Loading…';
+    table.style.display = 'none';
+
+    const res = await fetch('oddsmatcher.php' + (forceRefresh ? '?r=' + Date.now() : ''), {
+      cache: 'no-store'
+    });
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0){
+      allRows = [];
+      renderTable([]);
+      return;
+    }
+
+    allRows = data;
+    initBookmakerFilter(allRows);
+    applyFilters();
+  } catch (err){
+    console.error(err);
+    status.textContent = 'Error loading odds (check oddsmatcher.php / API keys).';
+    table.style.display = 'none';
+  }
+}
+
+// DOM is ready (script at bottom)
+initFiltersUI();
+loadOdds();
+</script>
+</body>
+</html>

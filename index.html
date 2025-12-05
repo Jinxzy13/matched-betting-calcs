@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Matched Betting Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg1:#04394a; --bg2:#021e28; --panel:#002d3c; --line:#0e586d;
+      --ink:#e6faff; --accent:#7ce3f0; --btn1:#16b7c5; --btn2:#109aa6;
+      --win:#2ed47a; --loss:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+   body{
+  font-family:'Ubuntu',sans-serif;
+  background: radial-gradient(circle at 50% 30%, var(--bg1), var(--bg2) 80%);
+  color:var(--ink);
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;       /* stack children vertically */
+  align-items:center;          /* centre horizontally */
+  justify-content:flex-start;  /* start at top, not middle */
+  text-align:center;
+}
+
+    #mb-calc{
+      background:rgba(0,45,60,.85);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:1.25rem 1.5rem 1.5rem;
+      width:min(980px,95vw);
+      box-shadow:0 0 40px rgba(0,0,0,.4);
+    }
+    .header{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:.5rem;
+    }
+    h2{font-weight:700; color:var(--accent); margin:.25rem 0}
+    .actions{display:flex; gap:.5rem}
+    .iconbtn{
+      background:transparent; border:1px solid var(--line); color:var(--accent);
+      border-radius:10px; padding:.45rem .6rem; cursor:pointer;
+    }
+    .iconbtn:hover{filter:brightness(1.15)}
+    .icon{display:inline-block; width:20px; height:20px; vertical-align:-4px}
+    label{display:block; margin:.4rem 0}
+    fieldset{
+      border:1px solid var(--line);
+      border-radius:10px; margin:1rem auto; padding:.75rem; text-align:left;
+      min-width:280px; max-width:420px;
+    }
+    input, select{
+      border:1px solid #094a5d; background:var(--bg1); color:var(--ink);
+      border-radius:6px; padding:.4rem .6rem; font-family:inherit; font-size:1rem;
+    }
+    input[readonly]{opacity:.85}
+    button{
+      background:linear-gradient(180deg,var(--btn1),var(--btn2));
+      color:#00252b; border:none; border-radius:10px; padding:.6rem 1rem;
+      font-weight:700; cursor:pointer;
+    }
+    button:hover{filter:brightness(1.1)}
+    h3{color:var(--accent); margin:1.25rem 0 .5rem}
+    .row{display:flex; flex-wrap:wrap; gap:1rem; justify-content:center}
+    .kv{min-width:220px}
+    .copyrow{margin-top:8px; display:flex; gap:8px; align-items:center; justify-content:center}
+    /* Modal */
+    .modal{
+      position:fixed; inset:0; display:none; place-items:center; padding:1rem;
+      background:rgba(0,0,0,.55); z-index:50;
+    }
+    .modal.open{display:grid}
+    .card{
+      width:min(520px,95vw); background:var(--panel); border:1px solid var(--line);
+      border-radius:14px; padding:1rem 1rem 1.25rem; text-align:left;
+    }
+    .card h4{margin:.2rem 0 0; color:var(--accent); font-size:1.4rem}
+    .grid{
+      display:grid; grid-template-columns:1fr; gap:.6rem; margin-top:.6rem;
+    }
+    .grid label{margin:0}
+    .card .bar{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem}
+    .card .btns{display:flex; gap:.6rem}
+    /* History */
+    .history{
+      margin-top:1rem; text-align:left; border-top:1px dashed var(--line); padding-top:.75rem;
+    }
+    .historybar{
+      display:flex; justify-content:space-between; align-items:center; gap:.5rem; margin-bottom:.5rem;
+    }
+    .historylist{display:grid; gap:.5rem; max-height:340px; overflow:auto; padding-right:.25rem}
+    .item{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:.35rem .75rem;
+      padding:.6rem .7rem; border:1px solid var(--line); border-radius:10px;
+      background:rgba(4,57,74,.55);
+    }
+    .item h5{margin:0; font-size:1.02rem}
+    .muted{opacity:.85; font-size:.92rem}
+    .pl{font-weight:700}
+    .pl.win{color:var(--win)} .pl.loss{color:var(--loss)}
+    .sub{font-size:.88rem; opacity:.9}
+    .tiny{font-size:.86rem; opacity:.85}
+    .pill{
+      border:1px solid var(--line); border-radius:999px; padding:.1rem .5rem; margin-left:.35rem;
+      font-size:.82rem; opacity:.9;
+    }
+    .ghost{background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:.4rem .6rem; cursor:pointer}
+    .ghost:hover{filter:brightness(1.1)}
+    .danger{border-color:#a14545; color:#ffbdbd}
+    @media (min-width:860px){
+      .row-2{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+    }
+.suggestions{
+  position:relative;
+  z-index:60;
+  background:#002d3c;
+  border:1px solid #0e586d;
+  border-radius:8px;
+  margin-top:4px;
+  display:none;
+  max-height:180px;
+  overflow-y:auto;
+  font-size:0.9rem;
+}
+.suggestion-item{
+  padding:4px 8px;
+  cursor:pointer;
+}
+.suggestion-item:hover{
+  background:rgba(124,227,240,0.12);
+}
+.topnav {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0 12px;
+  background: rgba(0, 0, 0, 0.32);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.topnav a {
+  font-weight: 500;
+  text-decoration: none;
+  margin: 0 14px;
+  color: #7ce3f0;
+  font-size: 1rem;
+}
+
+.topnav a:hover {
+  text-decoration: underline;
+}
+
+
+  </style>
+</head>
+<div class="topnav">
+    <a href="index.html">Main Calculator</a>
+    <a href="oddsmatcher.html">Odds Matcher</a>
+    <a href="refund.html">Risk Free</a>
+    <a href="acca.html">Acca</a>
+    <a href="ep.html">Extra Place</a>
+    <a href="early.html">Early Payout</a>
+    <a href="betbuilder.html">Bet Builder</a>
+</div>
+
+
+<div id="mb-calc">
+  <div class="header">
+  <h2>Matched Betting Calculator</h2>
+  <div class="actions">
+    <a href="sgm-info.html" class="iconbtn" title="Same Game Multiples info">
+      Bet Builder options
+    </a>
+    <button id="saveOpen" class="iconbtn" title="Save / Log bet">
+      
+      <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M3 5a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5zm12 0H9v6h6V5zM7 14h10v6H7v-6z"/>
+      </svg>
+      Save
+    </button>
+  </div>
+</div>
+
+
+  <label class="kv">
+    Bet type:
+    <select id="betType">
+      <option value="qualifying">Qualifying</option>
+      <option value="snr">Free Bet (SNR)</option>
+      <option value="sr">Free Bet (SR)</option>
+    </select>
+  </label>
+
+<label class="kv" style="display:flex; align-items:center; gap:.5rem; margin-top:.25rem">
+  <input id="noLay" type="checkbox" />
+  <span>Back only (no lay)</span>
+</label>
+
+  <div class="row row-2">
+    <fieldset>
+      <legend>Back Bet</legend>
+      <label>Stake (£): <input id="B" type="number" step="1" value="10" /></label>
+      <label>Odds (dec): <input id="Ob" type="number" step="0.01" value="2.10" /></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Lay Bet</legend>
+      <label>Lay odds (dec): <input id="Ol" type="number" step="0.01" value="2.12" /></label>
+      <label>Commission (%): <input id="cPct" type="number" step="0.01" value="0" /></label>
+    </fieldset>
+  </div>
+
+  <button id="calc">Calculate</button>
+
+  <h3>Results</h3>
+  <div class="row">
+    <div class="kv">Optimal lay stake: £<span id="L">0.00</span></div>
+    <div class="kv">Liability: £<span id="Liability">0.00</span></div>
+    <div class="kv"><span id="OutcomeLabel1">If back wins</span>: £<span id="BackWins">0.00</span></div>
+<div class="kv"><span id="OutcomeLabel2">If lay wins</span>: £<span id="LayWins">0.00</span></div>
+
+  </div>
+
+<div class="kv">Bet rating: <span id="rating">0.00%</span></div>
+
+
+  <div class="copyrow">
+    <label style="display:flex; align-items:center; gap:6px;">
+      <span>Copyable lay stake</span>
+      <input id="copyLay" readonly />
+    </label>
+    <button id="copyBtn" type="button">Copy</button>
+  </div>
+
+  
+  <h3 style="margin-top:1.25rem">History</h3>
+  <div class="history">
+    <div class="historybar">
+      <div class="tiny">Saved to database (server).</div>
+      <div style="display:flex; gap:.5rem">
+        <button class="ghost" id="exportBtn" title="Copy JSON data">Export</button>
+        
+      </div>
+    </div>
+    <div id="summaryBar"
+     style="margin-bottom:.6rem; text-align:center; color:#7ce3f0; font-weight:500">
+  Weekly P/L: £0.00 | Monthly P/L: £0.00 | Yearly P/L: £0.00
+</div>
+
+    <div id="historyList" class="historylist"></div>
+  </div>
+</div>
+
+
+<div id="logModal" class="modal" aria-hidden="true">
+  <div class="card">
+    <div class="bar">
+      <h4>Log Bet</h4>
+      <div class="btns">
+        <button class="ghost" id="closeModal">Cancel</button>
+        <button id="saveLog" class="iconbtn">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg>
+          Save
+        </button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <label>Event
+  <input id="logEvent" placeholder="Chelsea vs Arsenal" autocomplete="off" />
+  <div id="eventSuggestions" class="suggestions"></div>
+</label>
+      <label>Outcome Backed
+        <input id="logOutcome" placeholder="Over 2.5 Goals" />
+      </label>
+      <label>Bookmaker
+        <input id="logBookie" list="bookies" placeholder="Bet365" />
+        <datalist id="bookies">
+          <option>Bet365</option><option>William Hill</option><option>Paddy Power</option><option>Sky Bet</option>
+        </datalist>
+      </label>
+      <label>Exchange
+        <input id="logExchange" list="exchs" placeholder="Betfair / Smarkets / Matchbook" />
+        <datalist id="exchs">
+          <option>Betfair</option><option>Smarkets</option><option>Matchbook</option>
+        </datalist>
+      </label>
+    </div>
+
+    <p class="tiny" style="margin-top:.7rem">
+      Tip: The profit/loss saved below is an <strong>expected</strong> figure (worst-case of back/lay outcomes).
+      You can still see both individual outcomes in the calculator section.
+    </p>
+  </div>
+</div>
+
+
+<div id="settleModal" class="modal" aria-hidden="true">
+  <div class="card">
+    <div class="bar">
+      <h4>Settle Bet</h4>
+      <div class="btns">
+        <button class="ghost" id="settleCancel">Cancel</button>
+        <button id="settleSave" class="iconbtn">Save</button>
+      </div>
+    </div>
+
+    <div class="grid" id="settleForm">
+      
+    </div>
+
+    <p class="tiny" style="margin-top:.6rem">
+      Tip: You can override the suggested profit/loss if the exchange/bookie settled differently (e.g., rule 4, partial cashout).
+    </p>
+  </div>
+</div>
+
+
+<script>
+let editingId = null;
+/* ---------- Helpers (DB version) ---------- */
+const $ = (sel) => document.querySelector(sel);
+const listEl = $('#historyList');
+
+function money(x){ return (Math.round(x*100)/100).toFixed(2); }
+
+/* --- Database API calls --- */
+async function saveToServer(entry) {
+  const res = await fetch('save_bet.php', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(entry)
+  });
+  return res.json();
+}
+
+async function settleOnServer(payload) {
+  const res = await fetch('settle_bet.php', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+function suggestedPLFromDataset(d){
+  // For normal bets: pick the correct side
+  // For back-only (no lay): d.backWins is "Win", d.layWins is "Lose"
+  const noLay = Number(d.noLay || d.noLay === '1' ? d.noLay : d.noLay) === 1;
+  if (noLay) {
+    // default to Win for convenience
+    return { result: 'win', pl: Number(d.backWins) };
+  } else {
+    // default to 'lay_win' (arbitrary), user can switch
+    return { result: 'lay_win', pl: Number(d.layWins) };
+  }
+}
+
+
+async function loadHistory() {
+  const res = await fetch('get_history.php');
+  const data = await res.json();
+  return data;
+}
+
+async function deleteFromServer(id) {
+  await fetch('delete_bet.php?id=' + id);
+}
+
+function fmtSigned(x){
+  const n = Number(x) || 0;
+  const abs = money(Math.abs(n));
+  return (n >= 0 ? '£' + abs : '-£' + abs);
+}
+
+function prettyResult(code){
+  switch (code) {
+    case 'back_win': return 'Back won';
+    case 'lay_win':  return 'Lay won';
+    case 'win':      return 'Won';
+    case 'lose':     return 'Lost';
+    default:         return '';
+  }
+}
+
+
+/* ---------- Calculator ---------- */
+function compute(){
+  const betType = $('#betType').value;
+  const noLay = $('#noLay') ? $('#noLay').checked : false;
+
+  const B  = +$('#B').value;
+  const Ob = +$('#Ob').value;
+  let   Ol = +$('#Ol').value;
+  let   c  = (+$('#cPct').value)/100;
+
+  // Default labels
+  if ($('#OutcomeLabel1')) $('#OutcomeLabel1').textContent = 'If back wins';
+  if ($('#OutcomeLabel2')) $('#OutcomeLabel2').textContent = noLay ? 'If back loses' : 'If lay wins';
+
+  let L = 0, liability = 0, backWins = 0, layWins = 0;
+
+  if (noLay) {
+    // Back-only mode: ignore lay / commission / liability
+    $('#Ol').disabled = true;
+    $('#cPct').disabled = true;
+
+    if (betType === 'qualifying'){
+      backWins = B * (Ob - 1);   // profit if wins
+      layWins  = -B;             // lose stake if loses
+    } else if (betType === 'snr'){ // Free Bet (SNR)
+      backWins = B * (Ob - 1);   // profit from free stake
+      layWins  = 0;              // lose nothing if it loses
+    } else { // 'sr' Free Bet (SR)
+      backWins = B * Ob;         // treat as full free stake returned
+      layWins  = 0;
+    }
+
+  } else {
+    // Normal (with lay)
+    $('#Ol').disabled = false;
+    $('#cPct').disabled = false;
+
+    if (Ol <= c){
+      alert('Lay odds must be greater than commission.');
+      return null;
+    }
+
+    if (betType === 'qualifying' || betType === 'sr'){
+      L = (B * Ob) / (Ol - c);
+    } else { // snr
+      L = (B * (Ob - 1)) / (Ol - c);
+    }
+
+    liability = (Ol - 1) * L;
+
+    if (betType === 'qualifying'){
+      backWins = B * (Ob - 1) - liability;
+      layWins  = L * (1 - c) - B;
+    } else if (betType === 'snr'){
+      backWins = B * (Ob - 1) - liability;
+      layWins  = L * (1 - c);
+    } else { // sr
+      backWins = B * Ob - liability;
+      layWins  = L * (1 - c);
+    }
+  }
+
+  // --- Bet Rating ---
+  let rating = 0;
+
+  if (B > 0) {
+    if (betType === 'qualifying' || betType === 'sr') {
+      // Use worst-case outcome vs stake
+      rating = 100 * (1 + Math.min(backWins, layWins) / B);
+    } else if (betType === 'snr') {
+      // Free bet (SNR): best-case return vs free stake size
+      rating = 100 * (Math.max(backWins, layWins) / B);
+    }
+  }
+
+  // Clamp & update
+  rating = Math.max(0, Math.min(200, rating));
+  if ($('#rating')) {
+    $('#rating').textContent = (isFinite(rating) ? rating.toFixed(2) : '0.00') + '%';
+  }
+
+  // --- Update UI ---
+  $('#L').textContent         = money(L);
+  $('#Liability').textContent = money(liability);
+  $('#BackWins').textContent  = money(backWins);
+  $('#LayWins').textContent   = money(layWins);
+  $('#copyLay').value         = money(L);
+
+  return {
+    betType,
+    noLay,
+    B, Ob, Ol,
+    cPct:(+$('#cPct').value),
+    L,
+    liability,
+    backWins,
+    layWins,
+    rating
+  };
+}
+
+$('#calc').addEventListener('click', compute);
+$('#copyBtn').addEventListener('click', () => {
+  $('#copyLay').select();
+  document.execCommand('copy');
+});
+
+/* ---------- Modal open/close ---------- */
+const modal = $('#logModal');
+editingId = null; // new entry, not editing
+$('#saveOpen').addEventListener('click', () => {
+  // ensure results are up to date for saving
+  compute();
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden','false');
+  $('#logEvent').focus();
+});
+$('#closeModal').addEventListener('click', () => {
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden','true');
+});
+
+/* ---------- Save to history (DB) ---------- */
+$('#saveLog').addEventListener('click', async () => {
+  const calc = compute();
+  if (!calc) return;
+
+  const entry = {
+    event: $('#logEvent').value.trim() || '—',
+    outcome: $('#logOutcome').value.trim() || '—',
+    bookie: $('#logBookie').value.trim() || '—',
+    exchange: $('#logExchange').value.trim() || '—',
+    betType: calc.betType,
+    noLay: calc.noLay ? 1 : 0,
+    stake: Number(calc.B),
+    backOdds: Number(calc.Ob),
+    layOdds: Number(calc.Ol),
+    commissionPct: Number(calc.cPct),
+    layStake: Number(calc.L),
+    backWins: Number(calc.backWins),
+    layWins: Number(calc.layWins),
+    expectedPL: Number((calc.backWins < calc.layWins) ? calc.backWins : calc.layWins) // worst-case
+  };
+    // Simple "edit" behaviour: delete old, then save new
+  if (editingId) {
+    await deleteFromServer(editingId);
+    editingId = null;
+  }
+  await saveToServer(entry);
+  await renderHistory();
+
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden','true');
+
+  // light UX feedback
+  $('#saveOpen').animate(
+    [{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],
+    {duration:220}
+  );
+});
+
+// ---------- Event autocomplete ----------
+const eventInput = $('#logEvent');
+const suggBox = $('#eventSuggestions');
+let suggTimer = null;
+
+function clearSuggestions(){
+  if (!suggBox) return;
+  suggBox.style.display = 'none';
+  suggBox.innerHTML = '';
+}
+
+function showSuggestions(items){
+  if (!suggBox) return;
+  if (!items || !items.length){
+    clearSuggestions();
+    return;
+  }
+  suggBox.innerHTML = items.map(it => {
+    const d = new Date(it.date || '');
+    const dateStr = isNaN(d) ? '' :
+      `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return `
+      <div class="suggestion-item"
+           data-label="${escapeHtml(it.label)}"
+           data-date="${escapeHtml(dateStr)}"
+           data-league="${escapeHtml(it.league || '')}">
+        ${escapeHtml(it.label)}
+        ${dateStr ? `<span class="tiny muted"> (${escapeHtml(it.league || '')} ${dateStr})</span>` : ''}
+      </div>`;
+  }).join('');
+  suggBox.style.display = 'block';
+}
+
+if (eventInput) {
+  eventInput.addEventListener('input', () => {
+    const q = eventInput.value.trim();
+    if (suggTimer) clearTimeout(suggTimer);
+
+    if (q.length < 3){
+      clearSuggestions();
+      return;
+    }
+
+    suggTimer = setTimeout(async () => {
+      try {
+        const res = await fetch('fixtures_search.php?q=' + encodeURIComponent(q));
+        const data = await res.json();
+        console.log('Suggestions from server:', data);
+        showSuggestions(data);
+      } catch (e) {
+        console.error('Suggestion error', e);
+        clearSuggestions();
+      }
+    }, 250);
+  });
+
+  suggBox.addEventListener('click', (ev) => {
+    const item = ev.target.closest('.suggestion-item');
+    if (!item) return;
+    const label = item.getAttribute('data-label');
+    eventInput.value = label;
+    clearSuggestions();
+  });
+
+  eventInput.addEventListener('blur', () => {
+    setTimeout(clearSuggestions, 200);
+  });
+}
+
+/* ---------- History UI ---------- */
+function fmtDT(iso){
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function escapeHtml(str){
+  return String(str ?? '').replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[m]);
+}
+
+async function renderHistory(){
+  let hist = [];
+  try {
+    hist = await loadHistory();
+  } catch (e) {
+    console.error('Error loading history', e);
+    listEl.innerHTML = '<div class="tiny muted">Error loading history.</div>';
+    if ($('#summaryBar')) $('#summaryBar').textContent = '';
+    return;
+  }
+
+  if (!hist.length){
+    listEl.innerHTML = '<div class="tiny muted">No saved bets yet.</div>';
+    if ($('#summaryBar')) $('#summaryBar').textContent = '';
+    return;
+  }
+
+  // ---------- Weekly / Monthly / Yearly summaries (settled only) ----------
+  function startOfWeekMonday(d) {
+    const date = new Date(d);
+    const day = (date.getDay() + 6) % 7; // Monday = 0
+    date.setDate(date.getDate() - day);
+    date.setHours(0,0,0,0);
+    return date;
+  }
+  function isSameWeek(d1, d2){ return +startOfWeekMonday(d1) === +startOfWeekMonday(d2); }
+  function isSameMonth(d1, d2){ return d1.getFullYear()===d2.getFullYear() && d1.getMonth()===d2.getMonth(); }
+  function isSameYear(d1, d2){ return d1.getFullYear()===d2.getFullYear(); }
+
+  const now = new Date();
+  let weekPL = 0, monthPL = 0, yearPL = 0;
+
+  for (const e of hist){
+    if (!Number(e.settled)) continue;
+    const when = new Date(e.settled_at || e.created_at);
+    const pl = Number(e.settled_pl || 0);
+    if (isSameWeek(when, now))  weekPL  += pl;
+    if (isSameMonth(when, now)) monthPL += pl;
+    if (isSameYear(when, now))  yearPL  += pl;
+  }
+
+  if ($('#summaryBar')) {
+    $('#summaryBar').innerHTML =
+      `Weekly P/L: £${money(weekPL)} | Monthly P/L: £${money(monthPL)} | Yearly P/L: £${money(yearPL)}`;
+  }
+
+  // ---------------- Render rows ----------------
+  listEl.innerHTML = hist.map(e => {
+    const backOnly = Number(e.no_lay) === 1;
+    const settled  = Number(e.settled) === 1;
+
+    const bw = Number(e.back_wins);
+    const lw = Number(e.lay_wins);
+
+    // ---------- Big number on the right ----------
+    let mainPL = '';
+    let mainClass = '';
+
+    if (settled && e.settled_pl != null) {
+      // Show ONLY the actual settled result
+      const spl = Number(e.settled_pl);
+      mainPL = fmtSigned(spl);
+      mainClass = spl >= 0 ? 'win' : 'loss';
+
+    } else if (backOnly) {
+      // Unsettled back-only: show both possible outcomes
+      mainPL = `Win ${fmtSigned(bw)} • Lose ${fmtSigned(lw)}`;
+      mainClass = bw >= 0 ? 'win' : 'loss';
+
+    } else {
+      // Normal unsettled bet: show expected P/L (worst-case)
+      const expPL = Number(e.expected_pl);
+      const sign = expPL >= 0 ? '+' : '−';
+      mainPL = sign + '£' + money(Math.abs(expPL));
+      mainClass = expPL >= 0 ? 'win' : 'loss';
+    }
+
+    // Small grey line: always show both scenarios for context
+    const tinyLine = (backOnly || settled)
+      ? `Win ${fmtSigned(bw)} • Lose ${fmtSigned(lw)}`
+      : `BW ${fmtSigned(bw)} • LW ${fmtSigned(lw)}`;
+
+    // Settled pill
+    const settledLabel = prettyResult(e.settled_result);
+    const settledLine = settled
+      ? `<div class="tiny" style="margin-top:.2rem">
+           <span class="pill">Settled</span>
+           <span class="pl ${Number(e.settled_pl) >= 0 ? 'win' : 'loss'}">${fmtSigned(e.settled_pl)}</span>
+           ${settledLabel ? `<span class="tiny muted">(${settledLabel})</span>` : ''}
+         </div>`
+      : '';
+
+    const typePill = backOnly ? '<span class="pill">Back-only</span>' : '';
+
+    return `
+      <div class="item"
+           data-id="${e.id}"
+           data-event="${escapeHtml(e.event)}"
+           data-outcome="${escapeHtml(e.outcome)}"
+           data-bookie="${escapeHtml(e.bookmaker)}"
+           data-exchange="${escapeHtml(e.exchange)}"
+           data-bet-type="${e.bet_type}"
+           data-no-lay="${backOnly ? 1 : 0}"
+           data-stake="${e.stake}"
+           data-back-odds="${e.back_odds}"
+           data-lay-odds="${e.lay_odds}"
+           data-commission="${e.commission}"
+           data-lay-stake="${e.lay_stake}"
+           data-back-wins="${bw}"
+           data-lay-wins="${lw}"
+           data-expected-pl="${e.expected_pl}"
+           data-created="${e.created_at}"
+           data-settled="${settled ? 1 : 0}"
+           data-settled-result="${e.settled_result ?? ''}"
+           data-settled-pl="${e.settled_pl ?? ''}">
+        <div>
+          <h5>
+            ${escapeHtml(e.event)}
+            <span class="pill">${escapeHtml(e.outcome)}</span>
+            ${typePill}
+          </h5>
+          <div class="sub">${escapeHtml(e.bookmaker)} / ${escapeHtml(e.exchange)}</div>
+          <div class="tiny muted">
+            ${backOnly
+              ? `Back ${e.back_odds} | Stake £${money(e.stake)}`
+              : `Back ${e.back_odds} | Lay ${e.lay_odds} | Stake £${money(e.stake)} | Comm ${money(e.commission)}%`}
+          </div>
+          <div class="tiny muted">Type: ${e.bet_type.toUpperCase()} • ${e.created_at}</div>
+          ${settledLine}
+        </div>
+
+        <div style="text-align:right">
+          <div class="pl ${mainClass}">${mainPL}</div>
+          <div class="tiny muted">${tinyLine}</div>
+          <div style="margin-top:.35rem; display:flex; gap:.35rem; justify-content:flex-end">
+              <button class="ghost" data-act="copy">Copy</button>
+              <button class="ghost" data-act="edit">Edit</button>
+              ${settled
+                ? '<button class="ghost" data-act="unsettle">Unsettle</button>'
+                : '<button class="ghost" data-act="settle">Settle</button>'}
+              <button class="ghost danger" data-act="del">Delete</button>
+            </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+
+
+// item actions (DB-backed)
+listEl.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-act]');
+  if (!btn) return;
+
+  const item = btn.closest('.item');
+  if (!item) return;
+
+  const act = btn.dataset.act;
+  const d = item.dataset;  // all data-* attributes are here (camelCased)
+
+  if (act === 'del') {
+    await deleteFromServer(d.id);
+    renderHistory();
+    return;
+  }
+
+  if (act === 'edit') {
+    // Pre-fill the log modal with existing values
+    $('#logEvent').value   = d.event || '';
+    $('#logOutcome').value = d.outcome || '';
+    $('#logBookie').value  = d.bookie || '';
+    $('#logExchange').value= d.exchange || '';
+
+    // Also push the numbers back into the calculator so compute() matches
+    $('#B').value   = d.stake || '';
+    $('#Ob').value  = d.backOdds || '';
+    $('#Ol').value  = d.layOdds || '';
+    $('#cPct').value= d.commission || '';
+
+    // Set bet type + no-lay from dataset
+    $('#betType').value = (d.betType === 'snr') ? 'snr' : 'qualifying';
+    if ($('#noLay')) $('#noLay').checked = (Number(d.noLay) === 1);
+
+    // Remember which row we’re “editing”
+    editingId = d.id;
+
+    // Recompute and open the modal
+    compute();
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    $('#logEvent').focus();
+    return;
+  }
+
+  if (act === 'copy') {
+    const expected = Number(d.expectedPl);
+    const sign = expected >= 0 ? '+' : '−';
+    const text =
+`${d.event} — ${d.outcome}
+${d.bookie} / ${d.exchange}
+Back ${d.backOdds} • Lay ${d.layOdds} • Lay £${money(d.layStake)} • Comm ${money(d.commission)}%
+Exp P/L: ${sign}£${money(Math.abs(expected))} (BW £${money(d.backWins)} | LW £${money(d.layWins)})
+Saved: ${d.created}`;
+
+    navigator.clipboard?.writeText(text);
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = 'Copy', 900);
+  }
+});
+
+const settleModal = $('#settleModal');
+const settleForm = $('#settleForm');
+let settleCurrentId = null;
+
+function openSettleModal(item){
+  settleCurrentId = item.dataset.id;
+  const noLay = Number(item.dataset.noLay) === 1;
+
+  // Compute defaults
+  const defaults = suggestedPLFromDataset(item.dataset);
+  const backPL = Number(item.dataset.backWins);
+  const layPL  = Number(item.dataset.layWins);
+
+  // Build form
+  if (noLay) {
+    settleForm.innerHTML = `
+      <label style="display:flex; gap:.5rem; align-items:center">
+        <input type="radio" name="result" value="win" checked> Back won
+      </label>
+      <label style="display:flex; gap:.5rem; align-items:center">
+        <input type="radio" name="result" value="lose"> Back lost
+      </label>
+      <label>Suggested P/L (£)
+        <input id="settledPL" type="number" step="0.01" value="${money(defaults.pl)}">
+      </label>
+    `;
+  } else {
+    settleForm.innerHTML = `
+      <label style="display:flex; gap:.5rem; align-items:center">
+        <input type="radio" name="result" value="back_win"> Back won
+      </label>
+      <label style="display:flex; gap:.5rem; align-items:center">
+        <input type="radio" name="result" value="lay_win" checked> Lay won
+      </label>
+      <div class="tiny muted">Back win = £${money(backPL)} • Lay win = £${money(layPL)}</div>
+      <label>Settled P/L (£) <span class="tiny muted">(editable)</span>
+        <input id="settledPL" type="number" step="0.01" value="${money(defaults.pl)}">
+      </label>
+    `;
+  }
+
+  // Live-update suggested PL when the radio changes
+  settleForm.addEventListener('change', (e)=>{
+    if (e.target.name === 'result') {
+      const r = e.target.value;
+      let pl = defaults.pl;
+      if (noLay) {
+        pl = (r === 'win') ? backPL : layPL; // layPL is "lose" in back-only mode
+      } else {
+        pl = (r === 'back_win') ? backPL : layPL;
+      }
+      $('#settledPL').value = money(pl);
+    }
+  }, { once:false });
+
+  settleModal.classList.add('open');
+  settleModal.setAttribute('aria-hidden','false');
+}
+
+$('#settleSave').addEventListener('click', async () => {
+  if (!settleCurrentId) return;
+  const result = settleForm.querySelector('input[name="result"]:checked')?.value;
+  const pl = parseFloat($('#settledPL').value || '0');
+
+  await settleOnServer({
+    id: settleCurrentId,
+    settled: 1,
+    settled_result: result,
+    settled_pl: pl
+  });
+
+  settleModal.classList.remove('open');
+  settleModal.setAttribute('aria-hidden','true');
+  settleCurrentId = null;
+  await renderHistory();
+});
+
+$('#settleCancel').addEventListener('click', ()=>{
+  settleModal.classList.remove('open');
+  settleModal.setAttribute('aria-hidden','true');
+  settleCurrentId = null;
+});
+
+// Extend your item actions listener:
+listEl.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-act]');
+  if (!btn) return;
+  const item = btn.closest('.item');
+  if (!item) return;
+
+  const act = btn.dataset.act;
+
+  if (act === 'settle') {
+    openSettleModal(item);
+    return;
+  }
+
+  if (act === 'unsettle') {
+    await settleOnServer({ id: item.dataset.id, settled: 0 });
+    await renderHistory();
+    return;
+  }
+
+});
+
+
+$('#exportBtn').addEventListener('click', async ()=>{
+  const data = await loadHistory();
+  const json = JSON.stringify(data, null, 2);
+  await navigator.clipboard?.writeText(json);
+  $('#exportBtn').textContent = 'Copied JSON';
+  setTimeout(()=>$('#exportBtn').textContent='Export',900);
+});
+
+
+/* ---------- Boot ---------- */
+
+document.getElementById("calc").addEventListener("click", compute);
+document.getElementById("copyBtn").addEventListener("click", () => {
+  document.getElementById("copyLay").select();
+  document.execCommand("copy");
+});
+renderHistory();
+</script>
+<script>
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('back_odds')) return; // opened directly, nothing to do
+
+  const backOdds  = params.get('back_odds');
+  const layOdds   = params.get('lay_odds');
+  const stake     = params.get('stake');
+  const mode      = params.get('mode');       // "normal" or "snr"
+  const selection = params.get('selection') || '';
+  const event     = params.get('event') || '';
+
+  // Match your actual field IDs
+  const stakeInput   = document.getElementById('B');        // Back stake
+  const backInput    = document.getElementById('Ob');       // Back odds
+  const layInput     = document.getElementById('Ol');       // Lay odds
+  const betTypeInput = document.getElementById('betType');  // Bet type select
+  const noLayInput   = document.getElementById('noLay');    // Back only checkbox
+  const commInput    = document.getElementById('cPct');     // Commission
+
+  const logEvent     = document.getElementById('logEvent');   // Log modal event
+  const logOutcome   = document.getElementById('logOutcome'); // Log modal outcome
+
+  // Fill core calculator fields
+  if (stakeInput && stake)   stakeInput.value   = stake;
+  if (backInput && backOdds) backInput.value    = backOdds;
+  if (layInput && layOdds)   layInput.value     = layOdds;
+  if (commInput)             commInput.value    = 0;     // Matchbook 0% as per matcher
+  if (noLayInput)            noLayInput.checked = false; // normal lay bet by default
+
+  // Map mode from odds matcher → calc bet type
+  // odds matcher sends "normal" or "snr"
+  if (betTypeInput) {
+    betTypeInput.value = (mode === 'snr') ? 'snr' : 'qualifying';
+  }
+
+  // Pre-fill logging fields with event & selection
+  if (logEvent)   logEvent.value   = event;
+  if (logOutcome) logOutcome.value = selection;
+
+  // Run a calculation straight away so the results populate
+  if (typeof compute === 'function') {
+    compute();
+  }
+})();
+</script>
+
+</body>
+</html>
