@@ -1,0 +1,20 @@
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+
+# Logs & temp
+logs/
+*.log
+tmp/
+cache/
+
+# Composer / Node (if you ever add them)
+vendor/
+node_modules/
+
+# Env / config secrets (if you add them later)
+.env
+*.env
+config.local.php
+secret_*.php
