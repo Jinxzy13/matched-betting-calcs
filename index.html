@@ -219,9 +219,19 @@
   <label>Commission (%): 
     <input id="cPct" type="number" step="0.01" value="0" />
   </label>
-  <label>Custom lay stake (£, optional):
-    <input id="Lcustom" type="number" step="0.01" placeholder="Use your own lay stake" />
-  </label>
+<div style="margin-top:.5rem;">
+  <label>Custom lay stake (optional)</label>
+
+  <input id="Lcustom" type="range" min="0" max="50" value="0" step="0.01"
+         style="width:100%;" />
+
+  <div style="display:flex; justify-content:space-between; margin-top:.25rem; font-size:.9rem;">
+    <span>£<span id="LcustomMin">0.00</span></span>
+    <strong>£<span id="LcustomVal">0.00</span></strong>
+    <span>£<span id="LcustomMax">50.00</span></span>
+  </div>
+</div>
+
 </fieldset>
 
 
@@ -398,7 +408,7 @@ function prettyResult(code){
   }
 }
 
-
+let autoLayStake = 0;
 /* ---------- Calculator ---------- */
 function compute(){
   const betType = $('#betType').value;
@@ -460,7 +470,13 @@ function compute(){
     }
 
     // 2) If a custom lay stake is entered, override the auto one
-    L = hasCustomLay ? (parseFloat(customLayEl.value) || 0) : Lauto;
+    // If slider moved, use slider value instead of auto lay
+if ($('#Lcustom') && $('#Lcustom').value !== "0") {
+  L = parseFloat($('#Lcustom').value) || Lauto;
+} else {
+  L = Lauto;
+}
+
 
     liability = (Ol - 1) * L;
 
@@ -476,6 +492,31 @@ function compute(){
     }
   }
 
+const slider = $('#Lcustom');
+if (slider) {
+  slider.addEventListener('input', () => {
+    $('#LcustomVal').textContent = Number(slider.value).toFixed(2);
+    compute();  // live update P/L as slider moves
+  });
+}
+
+
+autoLayStake = Lauto;
+
+// Set slider bounds intelligently
+const slider = $('#Lcustom');
+if (slider) {
+  // Min = 0, Max = autoLayStake * 2 (gives room both sides)
+  slider.min = 0;
+  slider.max = (autoLayStake * 2).toFixed(2);
+
+  // If slider was at zero (default), keep auto stake selected
+  if (slider.value === "0") slider.value = autoLayStake.toFixed(2);
+
+  $('#LcustomMin').textContent = Number(slider.min).toFixed(2);
+  $('#LcustomMax').textContent = Number(slider.max).toFixed(2);
+  $('#LcustomVal').textContent = Number(slider.value).toFixed(2);
+}
 
   // --- Bet Rating ---
   let rating = 0;
