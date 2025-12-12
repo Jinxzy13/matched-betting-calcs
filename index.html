@@ -409,151 +409,135 @@ function prettyResult(code){
   }
 }
 
-let autoLayStake = 0;
+/* ---------- Calculator + Slider ---------- */
 
+let autoLayStake = 0;
 const laySlider = $('#Lcustom');
+
 if (laySlider) {
   laySlider.addEventListener('input', () => {
     $('#LcustomVal').textContent = Number(laySlider.value).toFixed(2);
-    compute(); // live update P/L as the slider moves
+    compute(); // live update
   });
 }
 
-let autoLayStake = 0;
-/* ---------- Calculator ---------- */
-function compute(){
+function compute() {
   const betType = $('#betType').value;
-  const noLay = $('#noLay') ? $('#noLay').checked : false;
+  const noLay = $('#noLay')?.checked ?? false;
 
   const B  = +$('#B').value;
   const Ob = +$('#Ob').value;
-  let   Ol = +$('#Ol').value;
-  let   c  = (+$('#cPct').value)/100;
+  const Ol = +$('#Ol').value;
+  const c  = (+$('#cPct').value) / 100;
 
-  const slider = $('#Lcustom');
+  const slider = laySlider;
 
-  // Default labels
-  if ($('#OutcomeLabel1')) $('#OutcomeLabel1').textContent = 'If back wins';
-  if ($('#OutcomeLabel2')) $('#OutcomeLabel2').textContent = noLay ? 'If back loses' : 'If lay wins';
+  // Reset labels
+  $('#OutcomeLabel1').textContent = "If back wins";
+  $('#OutcomeLabel2').textContent = noLay ? "If back loses" : "If lay wins";
 
   let L = 0, liability = 0, backWins = 0, layWins = 0;
 
+  /* ---------------- NO-LAY MODE ---------------- */
   if (noLay) {
-    // Back-only mode: ignore lay / commission / liability
     $('#Ol').disabled = true;
     $('#cPct').disabled = true;
-    if (slider) {
-      slider.disabled = true;
-      slider.value = "0";
-      $('#LcustomMin').textContent = '0.00';
-      $('#LcustomMax').textContent = '0.00';
-      $('#LcustomVal').textContent = '0.00';
-    }
+    slider.disabled = true;
 
-    if (betType === 'qualifying'){
-      backWins = B * (Ob - 1);   // profit if wins
-      layWins  = -B;             // lose stake if loses
-    } else if (betType === 'snr'){ // Free Bet (SNR)
-      backWins = B * (Ob - 1);   // profit from free stake
-      layWins  = 0;              // lose nothing if it loses
-    } else { // 'sr' Free Bet (SR)
-      backWins = B * Ob;         // treat as full free stake returned
+    slider.value = 0;
+    $('#LcustomMin').textContent = '0.00';
+    $('#LcustomMax').textContent = '0.00';
+    $('#LcustomVal').textContent = '0.00';
+
+    if (betType === 'qualifying') {
+      backWins = B * (Ob - 1);
+      layWins  = -B;
+    }
+    else if (betType === 'snr') {
+      backWins = B * (Ob - 1);
       layWins  = 0;
     }
+    else { // SR
+      backWins = B * Ob;
+      layWins  = 0;
+    }
+  }
 
-  } else {
-    // Normal (with lay)
+  /* ---------------- NORMAL MODE ---------------- */
+  else {
     $('#Ol').disabled = false;
     $('#cPct').disabled = false;
-    if (slider) {
-      slider.disabled = false;
+    slider.disabled = false;
+
+    if (Ol <= c) {
+      alert("Lay odds must be greater than commission.");
+      return;
     }
 
-    if (Ol <= c){
-      alert('Lay odds must be greater than commission.');
-      return null;
-    }
-
-    // 1) Calculate the *auto* lay stake
+    // AUTO lay calculation
     let Lauto;
-    if (betType === 'qualifying' || betType === 'sr'){
+    if (betType === 'qualifying' || betType === 'sr')
       Lauto = (B * Ob) / (Ol - c);
-    } else { // snr
+    else
       Lauto = (B * (Ob - 1)) / (Ol - c);
+
+    autoLayStake = Lauto;
+
+    // Configure slider around auto lay
+    slider.min = 0;
+    slider.max = (autoLayStake * 2).toFixed(2);
+
+    if (slider.value == "0") {
+      slider.value = autoLayStake.toFixed(2);
     }
 
-    // 2) Update slider bounds around that auto stake
-    if (slider) {
-      autoLayStake = Lauto;
+    $('#LcustomMin').textContent = slider.min;
+    $('#LcustomMax').textContent = slider.max;
+    $('#LcustomVal').textContent = Number(slider.value).toFixed(2);
 
-      slider.min = 0;
-      slider.max = (autoLayStake * 2).toFixed(2);
-
-      if (slider.value === "0") {
-        slider.value = autoLayStake.toFixed(2);
-      }
-
-      $('#LcustomMin').textContent = Number(slider.min).toFixed(2);
-      $('#LcustomMax').textContent = Number(slider.max).toFixed(2);
-      $('#LcustomVal').textContent = Number(slider.value).toFixed(2);
-    }
-
-    // 3) Use slider value if it’s non-zero, otherwise auto lay
-    if (slider && slider.value !== "0") {
-      L = parseFloat(slider.value) || Lauto;
-    } else {
-      L = Lauto;
-    }
+    // Use slider if moved, otherwise auto lay
+    if (slider.value !== "0") L = parseFloat(slider.value);
+    else L = Lauto;
 
     liability = (Ol - 1) * L;
 
-    if (betType === 'qualifying'){
+    if (betType === 'qualifying') {
       backWins = B * (Ob - 1) - liability;
       layWins  = L * (1 - c) - B;
-    } else if (betType === 'snr'){
+    }
+    else if (betType === 'snr') {
       backWins = B * (Ob - 1) - liability;
       layWins  = L * (1 - c);
-    } else { // sr
+    }
+    else { // SR
       backWins = B * Ob - liability;
       layWins  = L * (1 - c);
     }
   }
 
-  // --- Bet Rating ---
+  /* ---------------- Rating ---------------- */
   let rating = 0;
-
   if (B > 0) {
-    if (betType === 'qualifying' || betType === 'sr') {
-      rating = 100 * (1 + Math.min(backWins, layWins) / B);
-    } else if (betType === 'snr') {
+    if (betType === 'snr')
       rating = 100 * (Math.max(backWins, layWins) / B);
-    }
+    else
+      rating = 100 * (1 + Math.min(backWins, layWins) / B);
   }
 
   rating = Math.max(0, Math.min(200, rating));
-  if ($('#rating')) {
-    $('#rating').textContent = (isFinite(rating) ? rating.toFixed(2) : '0.00') + '%';
-  }
 
-  // --- Update UI ---
-  $('#L').textContent         = money(L);
+  $('#rating').textContent = rating.toFixed(2) + "%";
+
+  /* ---------------- Update UI ---------------- */
+  $('#L').textContent = money(L);
   $('#Liability').textContent = money(liability);
-  $('#BackWins').textContent  = money(backWins);
-  $('#LayWins').textContent   = money(layWins);
-  $('#copyLay').value         = money(L);
+  $('#BackWins').textContent = money(backWins);
+  $('#LayWins').textContent = money(layWins);
+  $('#copyLay').value = money(L);
 
-  return {
-    betType,
-    noLay,
-    B, Ob, Ol,
-    cPct:(+$('#cPct').value),
-    L,
-    liability,
-    backWins,
-    layWins,
-    rating
-  };
+  return { B, Ob, Ol, c, L, liability, backWins, layWins, rating };
 }
+
 
 
 $('#calc').addEventListener('click', compute);
