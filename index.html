@@ -161,6 +161,7 @@
 
   </style>
 </head>
+<body>
 <div class="topnav">
     <a href="index.html">Main Calculator</a>
     <a href="oddsmatcher.html">Odds Matcher</a>
@@ -409,6 +410,16 @@ function prettyResult(code){
 }
 
 let autoLayStake = 0;
+
+const laySlider = $('#Lcustom');
+if (laySlider) {
+  laySlider.addEventListener('input', () => {
+    $('#LcustomVal').textContent = Number(laySlider.value).toFixed(2);
+    compute(); // live update P/L as the slider moves
+  });
+}
+
+let autoLayStake = 0;
 /* ---------- Calculator ---------- */
 function compute(){
   const betType = $('#betType').value;
@@ -419,8 +430,7 @@ function compute(){
   let   Ol = +$('#Ol').value;
   let   c  = (+$('#cPct').value)/100;
 
-  const customLayEl = $('#Lcustom');
-  const hasCustomLay = customLayEl && customLayEl.value.trim() !== '';
+  const slider = $('#Lcustom');
 
   // Default labels
   if ($('#OutcomeLabel1')) $('#OutcomeLabel1').textContent = 'If back wins';
@@ -428,13 +438,16 @@ function compute(){
 
   let L = 0, liability = 0, backWins = 0, layWins = 0;
 
-
   if (noLay) {
     // Back-only mode: ignore lay / commission / liability
     $('#Ol').disabled = true;
     $('#cPct').disabled = true;
-    if (customLayEl) {
-      customLayEl.disabled = true;
+    if (slider) {
+      slider.disabled = true;
+      slider.value = "0";
+      $('#LcustomMin').textContent = '0.00';
+      $('#LcustomMax').textContent = '0.00';
+      $('#LcustomVal').textContent = '0.00';
     }
 
     if (betType === 'qualifying'){
@@ -452,8 +465,8 @@ function compute(){
     // Normal (with lay)
     $('#Ol').disabled = false;
     $('#cPct').disabled = false;
-    if (customLayEl) {
-      customLayEl.disabled = false;
+    if (slider) {
+      slider.disabled = false;
     }
 
     if (Ol <= c){
@@ -469,14 +482,28 @@ function compute(){
       Lauto = (B * (Ob - 1)) / (Ol - c);
     }
 
-    // 2) If a custom lay stake is entered, override the auto one
-    // If slider moved, use slider value instead of auto lay
-if ($('#Lcustom') && $('#Lcustom').value !== "0") {
-  L = parseFloat($('#Lcustom').value) || Lauto;
-} else {
-  L = Lauto;
-}
+    // 2) Update slider bounds around that auto stake
+    if (slider) {
+      autoLayStake = Lauto;
 
+      slider.min = 0;
+      slider.max = (autoLayStake * 2).toFixed(2);
+
+      if (slider.value === "0") {
+        slider.value = autoLayStake.toFixed(2);
+      }
+
+      $('#LcustomMin').textContent = Number(slider.min).toFixed(2);
+      $('#LcustomMax').textContent = Number(slider.max).toFixed(2);
+      $('#LcustomVal').textContent = Number(slider.value).toFixed(2);
+    }
+
+    // 3) Use slider value if it’s non-zero, otherwise auto lay
+    if (slider && slider.value !== "0") {
+      L = parseFloat(slider.value) || Lauto;
+    } else {
+      L = Lauto;
+    }
 
     liability = (Ol - 1) * L;
 
@@ -492,46 +519,17 @@ if ($('#Lcustom') && $('#Lcustom').value !== "0") {
     }
   }
 
-const slider = $('#Lcustom');
-if (slider) {
-  slider.addEventListener('input', () => {
-    $('#LcustomVal').textContent = Number(slider.value).toFixed(2);
-    compute();  // live update P/L as slider moves
-  });
-}
-
-
-autoLayStake = Lauto;
-
-// Set slider bounds intelligently
-const slider = $('#Lcustom');
-if (slider) {
-  // Min = 0, Max = autoLayStake * 2 (gives room both sides)
-  slider.min = 0;
-  slider.max = (autoLayStake * 2).toFixed(2);
-
-  // If slider was at zero (default), keep auto stake selected
-  if (slider.value === "0") slider.value = autoLayStake.toFixed(2);
-
-  $('#LcustomMin').textContent = Number(slider.min).toFixed(2);
-  $('#LcustomMax').textContent = Number(slider.max).toFixed(2);
-  $('#LcustomVal').textContent = Number(slider.value).toFixed(2);
-}
-
   // --- Bet Rating ---
   let rating = 0;
 
   if (B > 0) {
     if (betType === 'qualifying' || betType === 'sr') {
-      // Use worst-case outcome vs stake
       rating = 100 * (1 + Math.min(backWins, layWins) / B);
     } else if (betType === 'snr') {
-      // Free bet (SNR): best-case return vs free stake size
       rating = 100 * (Math.max(backWins, layWins) / B);
     }
   }
 
-  // Clamp & update
   rating = Math.max(0, Math.min(200, rating));
   if ($('#rating')) {
     $('#rating').textContent = (isFinite(rating) ? rating.toFixed(2) : '0.00') + '%';
@@ -556,6 +554,7 @@ if (slider) {
     rating
   };
 }
+
 
 $('#calc').addEventListener('click', compute);
 $('#copyBtn').addEventListener('click', () => {
@@ -1026,11 +1025,7 @@ $('#exportBtn').addEventListener('click', async ()=>{
 
 /* ---------- Boot ---------- */
 
-document.getElementById("calc").addEventListener("click", compute);
-document.getElementById("copyBtn").addEventListener("click", () => {
-  document.getElementById("copyLay").select();
-  document.execCommand("copy");
-});
+
 renderHistory();
 </script>
 <script>
