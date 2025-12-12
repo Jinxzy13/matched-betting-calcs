@@ -211,12 +211,19 @@
       <label>Odds (dec): <input id="Ob" type="number" step="0.01" value="2.10" /></label>
     </fieldset>
 
-    <fieldset>
-      <legend>Lay Bet</legend>
-      <label>Lay odds (dec): <input id="Ol" type="number" step="0.01" value="2.12" /></label>
-      <label>Commission (%): <input id="cPct" type="number" step="0.01" value="0" /></label>
-    </fieldset>
-  </div>
+<fieldset>
+  <legend>Lay Bet</legend>
+  <label>Lay odds (dec): 
+    <input id="Ol" type="number" step="0.01" value="2.12" />
+  </label>
+  <label>Commission (%): 
+    <input id="cPct" type="number" step="0.01" value="0" />
+  </label>
+  <label>Custom lay stake (£, optional):
+    <input id="Lcustom" type="number" step="0.01" placeholder="Use your own lay stake" />
+  </label>
+</fieldset>
+
 
   <button id="calc">Calculate</button>
 
@@ -402,16 +409,23 @@ function compute(){
   let   Ol = +$('#Ol').value;
   let   c  = (+$('#cPct').value)/100;
 
+  const customLayEl = $('#Lcustom');
+  const hasCustomLay = customLayEl && customLayEl.value.trim() !== '';
+
   // Default labels
   if ($('#OutcomeLabel1')) $('#OutcomeLabel1').textContent = 'If back wins';
   if ($('#OutcomeLabel2')) $('#OutcomeLabel2').textContent = noLay ? 'If back loses' : 'If lay wins';
 
   let L = 0, liability = 0, backWins = 0, layWins = 0;
 
+
   if (noLay) {
     // Back-only mode: ignore lay / commission / liability
     $('#Ol').disabled = true;
     $('#cPct').disabled = true;
+    if (customLayEl) {
+      customLayEl.disabled = true;
+    }
 
     if (betType === 'qualifying'){
       backWins = B * (Ob - 1);   // profit if wins
@@ -428,17 +442,25 @@ function compute(){
     // Normal (with lay)
     $('#Ol').disabled = false;
     $('#cPct').disabled = false;
+    if (customLayEl) {
+      customLayEl.disabled = false;
+    }
 
     if (Ol <= c){
       alert('Lay odds must be greater than commission.');
       return null;
     }
 
+    // 1) Calculate the *auto* lay stake
+    let Lauto;
     if (betType === 'qualifying' || betType === 'sr'){
-      L = (B * Ob) / (Ol - c);
+      Lauto = (B * Ob) / (Ol - c);
     } else { // snr
-      L = (B * (Ob - 1)) / (Ol - c);
+      Lauto = (B * (Ob - 1)) / (Ol - c);
     }
+
+    // 2) If a custom lay stake is entered, override the auto one
+    L = hasCustomLay ? (parseFloat(customLayEl.value) || 0) : Lauto;
 
     liability = (Ol - 1) * L;
 
@@ -453,6 +475,7 @@ function compute(){
       layWins  = L * (1 - c);
     }
   }
+
 
   // --- Bet Rating ---
   let rating = 0;
