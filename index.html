@@ -710,23 +710,36 @@ async function renderHistory(){
   function isSameWeek(d1, d2){ return +startOfWeekMonday(d1) === +startOfWeekMonday(d2); }
   function isSameMonth(d1, d2){ return d1.getFullYear()===d2.getFullYear() && d1.getMonth()===d2.getMonth(); }
   function isSameYear(d1, d2){ return d1.getFullYear()===d2.getFullYear(); }
+  function isSameDay(d1, d2){
+  return d1.getFullYear()===d2.getFullYear()
+      && d1.getMonth()===d2.getMonth()
+      && d1.getDate()===d2.getDate();
+}
 
-  const now = new Date();
-  let weekPL = 0, monthPL = 0, yearPL = 0;
 
-  for (const e of hist){
-    if (!Number(e.settled)) continue;
-    const when = new Date(e.settled_at || e.created_at);
-    const pl = Number(e.settled_pl || 0);
-    if (isSameWeek(when, now))  weekPL  += pl;
-    if (isSameMonth(when, now)) monthPL += pl;
-    if (isSameYear(when, now))  yearPL  += pl;
-  }
+const now = new Date();
+let dayPL = 0, weekPL = 0, monthPL = 0, yearPL = 0, lifePL = 0;
 
-  if ($('#summaryBar')) {
-    $('#summaryBar').innerHTML =
-      `Weekly P/L: £${money(weekPL)} | Monthly P/L: £${money(monthPL)} | Yearly P/L: £${money(yearPL)}`;
-  }
+for (const e of hist){
+  if (!Number(e.settled)) continue;
+
+  const when = new Date(e.settled_at || e.created_at);
+  const pl = Number(e.settled_pl || 0);
+
+  lifePL += pl;
+  if (isSameDay(when, now))   dayPL   += pl;
+  if (isSameWeek(when, now))  weekPL  += pl;
+  if (isSameMonth(when, now)) monthPL += pl;
+  if (isSameYear(when, now))  yearPL  += pl;
+}
+
+
+
+if ($('#summaryBar')) {
+  $('#summaryBar').innerHTML =
+    `Daily P/L: £${money(dayPL)} | Weekly P/L: £${money(weekPL)} | Monthly P/L: £${money(monthPL)} | Yearly P/L: £${money(yearPL)} | Lifetime P/L: £${money(lifePL)}`;
+}
+
 
   // ---------------- Render rows ----------------
   listEl.innerHTML = hist.map(e => {
