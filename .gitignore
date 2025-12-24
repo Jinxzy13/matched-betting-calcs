@@ -19,3 +19,4 @@ node_modules/
 config.local.php
 secret_*.php
 config/odds_creds.php
+mb_config.php
