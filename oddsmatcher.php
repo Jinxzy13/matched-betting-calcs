@@ -7,19 +7,53 @@ require __DIR__ . '/rapidapi_fetch.php'; // RapidAPI / API-Football back odds (s
 
 header('Content-Type: application/json');
 
-$DEBUG = isset($_GET['debug']) ? (int)$_GET['debug'] : 1;
+$DEBUG = isset($_GET['debug']) ? (int)$_GET['debug'] : 0;
 
 $STAKE      = 10.0;  // reference stake
-$COMMISSION = 0.0;   // Matchbook commission (0% on your account)
+$COMMISSION = 0.0;   // Matchbook commission (0% on my account)
 
 
 
 function normalise_team_name(string $name): string {
-    $name = strtolower($name);
-    $name = preg_replace('/\b(fc|cf|afc|sc|u\d+|[0-9]+)\b/', '', $name);
+    $name = strtolower(trim($name));
+
+    // common junk words / abbreviations
+    $name = str_replace(['&', "'"], ['and', ''], $name);
+
+    // expand / normalise some common football abbreviations
+    $repls = [
+        ' utd ' => ' united ',
+        ' untd ' => ' united ',
+        ' fc ' => ' ',
+        ' cf ' => ' ',
+        ' afc ' => ' ',
+        ' sc ' => ' ',
+        ' bk ' => ' ',
+        ' fk ' => ' ',
+        ' ac ' => ' ',
+        ' cd ' => ' ',
+        ' de ' => ' ',
+        ' la ' => ' ',
+        ' the ' => ' ',
+        ' city ' => ' city ', // keep as word boundary safe
+        ' ct ' => ' caledonianthistle ', // helps Inverness CT
+    ];
+    $name = ' ' . $name . ' ';
+    foreach ($repls as $a => $b) {
+        $name = str_replace($a, $b, $name);
+    }
+    $name = trim($name);
+
+    // remove age groups and numbers
+    $name = preg_replace('/\bu\d+\b/', '', $name);
+    $name = preg_replace('/\b\d+\b/', '', $name);
+
+    // squash punctuation/spaces
     $name = preg_replace('/[^a-z0-9]+/', '', $name);
+
     return $name;
 }
+
 
 function classify_mb_runner(string $runnerName, string $homeName, string $awayName, ?int $idx = null): ?string {
     $norm = function ($s) {
@@ -176,39 +210,35 @@ function get_matchbook_session_token(string $loginUrl, string $cacheFile, int $t
     return null;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 $events = [];
 
+/* =========================
+ *  1. Fetch BACK odds from providers (selectable)
+ * ========================= */
 
+$src = strtolower(trim($_GET['src'] ?? 'all')); // all|mrdoge|oddsapi|rapidapi
 
+$mrdogeEvents   = [];
+$oddsApiEvents  = [];
+$rapidApiEvents = [];
 
-$oddsApiEvents = fetch_oddsapi_back_events();
-$events        = array_merge($events, $oddsApiEvents);
-
-$rapidApiEvents = fetch_rapidapi_back_events();
-$events         = array_merge($events, $rapidApiEvents);
-
-if (!is_array($events)) {
-    $events = [];
+// Always fetch OddsAPI when src=all (because it’s your main football source)
+if ($src === 'all' || $src === 'oddsapi') {
+  $oddsApiEvents = fetch_oddsapi_back_events();
 }
+
+// Only include MrDoge in "all" if explicitly asked (prevents pollution)
+if ($src === 'mrdoge') {
+  $mrdogeEvents = fetch_mrdoge_back_events();
+}
+
+// RapidAPI similar (only include when you enable it)
+if ($src === 'rapidapi') {
+  $rapidApiEvents = fetch_rapidapi_back_events();
+}
+
+$events = array_merge($oddsApiEvents, $mrdogeEvents, $rapidApiEvents);
+if (!is_array($events)) $events = [];
 
 
 
@@ -263,6 +293,12 @@ if ($sessionToken && $events) {
             'price-depth'   => 3,
             'per-page'      => 400,
         ];
+
+        if ($DEBUG) {
+  error_log("NORMTEST: Inverness CT -> " . normalise_team_name("Inverness CT"));
+  error_log("NORMTEST: Manchester Utd -> " . normalise_team_name("Manchester Utd"));
+}
+
 
         $eventsData      = null;
         $eventsUrl_final = null;
@@ -329,12 +365,25 @@ if ($sessionToken && $events) {
                 $k_away_home = normalise_team_name($awayName) . '|' . normalise_team_name($homeName);
 
                 $candidates = [];
-                foreach ($events as $ekey => $E) {
-                    $k_e = normalise_team_name($E['home']) . '|' . normalise_team_name($E['away']);
-                    if ($k_e === $k_home_away || $k_e === $k_away_home) {
-                        $candidates[] = $ekey;
-                    }
-                }
+                $mbHomeN = normalise_team_name($homeName);
+$mbAwayN = normalise_team_name($awayName);
+
+foreach ($events as $ekey => $E) {
+    $eh = normalise_team_name($E['home']);
+    $ea = normalise_team_name($E['away']);
+
+    $direct = ($eh === $mbHomeN && $ea === $mbAwayN) || ($eh === $mbAwayN && $ea === $mbHomeN);
+
+    // fallback: substring containment (helps "Inverness" vs "InvernessCT", "Man Utd" vs "Manchester United")
+    $fuzzy =
+        (str_contains($eh, $mbHomeN) || str_contains($mbHomeN, $eh)) &&
+        (str_contains($ea, $mbAwayN) || str_contains($mbAwayN, $ea));
+
+    if ($direct || $fuzzy) {
+        $candidates[] = $ekey;
+    }
+}
+
                 if (!$candidates) continue;
                 $join_stats['name_matches']++;
 

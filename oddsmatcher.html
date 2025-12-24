@@ -196,6 +196,16 @@
         </select>
       </div>
 
+      <div>
+  <label for="filter-source"><strong>Source</strong></label><br>
+  <select id="filter-source">
+    <option value="all">All</option>
+    <option value="mrdoge">MrDoge</option>
+    <option value="oddsapi">OddsAPI</option>
+    <option value="rapidapi">RapidAPI</option>
+  </select>
+</div>
+
       
       <div>
         <label for="filter-min-rating"><strong>Rating range</strong></label><br>
@@ -529,16 +539,20 @@ async function loadOdds(forceRefresh = false){
   const status = document.getElementById('status');
   const table  = document.getElementById('oddsTable');
   const tbody  = table ? table.querySelector('tbody') : null;
-
   if (!table || !tbody) return;
+
+  const srcSel = document.getElementById('filter-source');
+  const srcVal = srcSel ? (srcSel.value || 'all') : 'all';
 
   try{
     status.textContent = 'Loading…';
     table.style.display = 'none';
 
-    const res = await fetch('oddsmatcher.php' + (forceRefresh ? '?r=' + Date.now() : ''), {
-      cache: 'no-store'
-    });
+    const url = new URL('oddsmatcher.php', window.location.href);
+    url.searchParams.set('src', srcVal);
+    if (forceRefresh) url.searchParams.set('r', Date.now());
+
+    const res = await fetch(url.toString(), { cache: 'no-store' });
     const data = await res.json();
 
     if (!Array.isArray(data) || data.length === 0){
@@ -556,6 +570,12 @@ async function loadOdds(forceRefresh = false){
     table.style.display = 'none';
   }
 }
+
+const srcSel = document.getElementById('filter-source');
+if (srcSel){
+  srcSel.addEventListener('change', () => loadOdds(true));
+}
+
 
 // DOM is ready (script at bottom)
 initFiltersUI();

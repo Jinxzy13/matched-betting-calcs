@@ -351,6 +351,7 @@ const listEl = $('#historyList');
 function money(x){ return (Math.round(x*100)/100).toFixed(2); }
 
 /* --- Database API calls --- */
+
 async function saveToServer(entry) {
   const res = await fetch('save_bet.php', {
     method: 'POST',
@@ -822,7 +823,7 @@ if ($('#summaryBar')) {
               ? `Back ${e.back_odds} | Stake £${money(e.stake)}`
               : `Back ${e.back_odds} | Lay ${e.lay_odds} | Stake £${money(e.stake)} | Comm ${money(e.commission)}%`}
           </div>
-          <div class="tiny muted">Type: ${e.bet_type.toUpperCase()} • ${e.created_at}</div>
+          <div class="tiny muted">Type: ${(e.bet_type || 'unknown').toUpperCase()} • ${e.created_at}</div>
           ${settledLine}
         </div>
 
@@ -904,6 +905,8 @@ Saved: ${d.created}`;
     setTimeout(() => btn.textContent = 'Copy', 900);
   }
 });
+
+
 
 const settleModal = $('#settleModal');
 const settleForm = $('#settleForm');

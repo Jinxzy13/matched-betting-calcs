@@ -1,10 +1,14 @@
 <?php
+// mrdoge_fetch.php
 
-
-
-
-$MRDOGE_API_KEY = 'sk_live_PUT_API_KEY_HERE';
-$MRDOGE_BASE    = 'https://api.mrdoge.co/v2';
+$cfg = @include __DIR__ . '/config/odds_creds.php';
+if (is_array($cfg) && isset($cfg['mrdoge'])) {
+  $MRDOGE_API_KEY = $cfg['mrdoge']['api_key'] ?? '';
+  $MRDOGE_BASE    = $cfg['mrdoge']['base'] ?? 'https://api.mrdoge.co/v2';
+} else {
+  $MRDOGE_API_KEY = '';
+  $MRDOGE_BASE    = 'https://api.mrdoge.co/v2';
+}
 
 
 function fetch_mrdoge_back_events(): array
@@ -31,14 +35,12 @@ function fetch_mrdoge_back_events(): array
         33333,    // Liga dos Campeões (UCL)
         33619,    // Liga Europa (UEL)
         33620,    // Liga Conferência (UECL)
+
+        65,       // Sample I think
     ];
 
-    $url = $MRDOGE_BASE . '/matches'
-         . '?sport=soccer'
-         . '&status=upcoming'
-         . '&status=live'
-         . '&locale=en'
-         . '&limit=500';
+   $url = $MRDOGE_BASE . '/matches?sport=soccer&status=upcoming&locale=en&limit=500';
+
 
     $ch = curl_init();
     curl_setopt_array($ch, [
@@ -50,17 +52,29 @@ function fetch_mrdoge_back_events(): array
         ],
         CURLOPT_TIMEOUT        => 15,
     ]);
-    $res = curl_exec($ch);
-    if ($res === false) {
-        curl_close($ch);
-        return [];
-    }
-    curl_close($ch);
+   $res  = curl_exec($ch);
+$err  = curl_error($ch);
+$info = curl_getinfo($ch);
+curl_close($ch);
 
-    $json = json_decode($res, true);
-    if (!is_array($json)) {
-        return [];
-    }
+if ($res === false) {
+    error_log("MRDOGE curl error: $err");
+    return [];
+}
+
+if (($info['http_code'] ?? 0) !== 200) {
+    error_log("MRDOGE HTTP " . ($info['http_code'] ?? 0) . " url=$url body_snip=" . substr($res, 0, 250));
+    return [];
+}
+
+$json = json_decode($res, true);
+if (!is_array($json)) {
+    error_log("MRDOGE non-JSON body_snip=" . substr($res, 0, 250));
+    return [];
+}
+
+error_log("MRDOGE ok: keys=" . implode(',', array_keys($json)) . " data_count=" . count($json['data'] ?? []));
+
 
     $events = [];
 
@@ -68,9 +82,10 @@ function fetch_mrdoge_back_events(): array
         $compId = $m['competitionId']
             ?? ($m['competition']['id'] ?? null);
 
-        if (!$compId || !in_array((int)$compId, $allowedCompetitions, true)) {
-            continue;
-        }
+       if (!$compId) {
+    continue;
+}
+
 
         $home = $m['homeTeam']['name'] ?? null;
         $away = $m['awayTeam']['name'] ?? null;

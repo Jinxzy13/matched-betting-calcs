@@ -18,3 +18,4 @@ node_modules/
 *.env
 config.local.php
 secret_*.php
+config/odds_creds.php

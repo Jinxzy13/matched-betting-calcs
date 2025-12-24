@@ -1,59 +1,43 @@
 <?php
 
-
-
 $RAPIDAPI_CONFIG = [
-    'key'   => 'YOUR_RAPIDAPI_KEY_HERE',      // <--- PUT YOUR KEY HERE
-    'host'  => 'api-football-v1.p.rapidapi.com',
+  'key'  => 'YOUR_RAPIDAPI_KEY_HERE',
+  'host' => 'api-football-v1.p.rapidapi.com',
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    'league_ids' => [
-        39,   // EPL
-        40,   // Championship
-        41,   // League One
-        42,   // League Two
-        140,  // La Liga
-        135,  // Serie A
-        78,   // Bundesliga
-        61,   // Ligue 1
-        94,   // Primeira Liga
-        2,    // Champions League
-        3,    // Europa League
-
-    ],
-
-    'season' => 2024,
-    'date'   => null,  // e.g. date('Y-m-d')
-
-
-    'bookmaker_ids' => [],
+  'league_ids' => [39,40,41,42,140,135,78,61,94,2,3],
+  'season' => 2025,
+  'date'   => null,
+  'bookmaker_ids' => [],
 ];
 
 
 function rapidapi_http_get(string $path, array $query, array $cfg, int $timeout = 15): ?array
 {
-    $url = 'https://' . $cfg['host'] . $path;
-    if ($query) {
-        $url .= '?' . http_build_query($query);
-    }
+  $mode = $cfg['mode'] ?? 'rapidapi';
 
-    $headers = [
-        'x-rapidapi-host: ' . $cfg['host'],
-        'x-rapidapi-key: ' . $cfg['key'],
-        'Accept: application/json',
-    ];
+// Build URL
+$url = 'https://' . $cfg['host'] . $path;
+if ($query) $url .= '?' . http_build_query($query);
+
+// Headers
+$headers = ['Accept: application/json'];
+
+if ($mode === 'direct') {
+    // Direct API-Sports
+    $headers[] = 'x-apisports-key: ' . $cfg['key'];
+
+    // IMPORTANT: direct host is already v3.*, so strip "/v3" prefix if present
+    if (str_starts_with($path, '/v3/')) {
+        $path = substr($path, 3); // "/v3/odds" -> "/odds"
+        $url = 'https://' . $cfg['host'] . $path;
+        if ($query) $url .= '?' . http_build_query($query);
+    }
+} else {
+    // RapidAPI gateway
+    $headers[] = 'x-rapidapi-host: ' . $cfg['host'];
+    $headers[] = 'x-rapidapi-key: ' . $cfg['key'];
+}
+
 
     $ch = curl_init();
     curl_setopt_array($ch, [
@@ -110,6 +94,18 @@ function rapidapi_fetch_back_events(array $cfg): array
         return [];
     }
 
+// If season not explicitly set, auto-pick current soccer season start year
+$season = $cfg['season'] ?? null;
+if (!$season) {
+  $y = (int)date('Y');
+  $m = (int)date('n');
+  // Soccer seasons usually start around Aug; Jan-Jun belongs to previous season start year
+  $season = ($m < 7) ? ($y - 1) : $y;
+} else {
+  $season = (int)$season;
+}
+
+
     $leagueIds    = $cfg['league_ids']    ?? [];
     $season       = $cfg['season']        ?? null;
     $date         = $cfg['date']          ?? null;  // can be null
@@ -145,12 +141,13 @@ function rapidapi_fetch_back_events(array $cfg): array
 
 
 
-            $fixture    = $item['fixture']    ?? [];
-            $teams      = $fixture['teams']   ?? [];
-            $homeTeam   = $teams['home']['name'] ?? null;
-            $awayTeam   = $teams['away']['name'] ?? null;
-            $startTime  = $fixture['date']   ?? null;
+            $fixture    = $item['fixture'] ?? [];
+            $teamsObj   = $item['teams'] ?? [];
+            $homeTeam   = $teamsObj['home']['name'] ?? null;
+            $awayTeam   = $teamsObj['away']['name'] ?? null;
+            $startTime  = $fixture['date'] ?? null;
             $bookmakers = $item['bookmakers'] ?? [];
+
 
             if (!$homeTeam || !$awayTeam) {
                 continue;
@@ -216,4 +213,11 @@ function rapidapi_fetch_back_events(array $cfg): array
     }
 
     return $events;
+}
+
+function fetch_rapidapi_back_events(): array {
+  $cfgAll = @include __DIR__ . '/config/odds_creds.php';
+  $cfg = is_array($cfgAll) ? ($cfgAll['rapidapi'] ?? null) : null;
+  if (!is_array($cfg)) return [];
+  return rapidapi_fetch_back_events($cfg);
 }
